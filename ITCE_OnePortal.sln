@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34525.116
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ITCE_OnePortal", "ITCE_OnePortal\ITCE_OnePortal.csproj", "{57E55124-0D68-4CF1-8621-354FEDC89100}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataAccessLibrary", "DataAccessLibrary\DataAccessLibrary.csproj", "{6808EDC7-EBCD-4876-92D2-A55C10A10511}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{57E55124-0D68-4CF1-8621-354FEDC89100}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{57E55124-0D68-4CF1-8621-354FEDC89100}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{57E55124-0D68-4CF1-8621-354FEDC89100}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{57E55124-0D68-4CF1-8621-354FEDC89100}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6808EDC7-EBCD-4876-92D2-A55C10A10511}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6808EDC7-EBCD-4876-92D2-A55C10A10511}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6808EDC7-EBCD-4876-92D2-A55C10A10511}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6808EDC7-EBCD-4876-92D2-A55C10A10511}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C8DA4EDF-C422-4047-9E42-6643A4AA03D2}
+	EndGlobalSection
+EndGlobal
