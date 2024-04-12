@@ -1,0 +1,50 @@
+﻿@page "/SkoleData"
+
+@using DataAccessLibrary
+
+@inject ISkoleData _db
+
+<form class="form-container d-flex justify-content-between align-items-center">
+    <h1>Skole data oversigt</h1>
+    <a href="/SkoleDataOpret" class="btn btn-primary">Opret skole</a>
+</form>
+
+@if (schools is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Prefix</th>
+                <th>Navn</th>
+                <th>Tekniker gruppe</th>
+                <th>CVR</th>
+                <th>EAN</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var school in schools)
+            {
+                <tr>
+                    <td>@school.SkolePrefix</td>
+                    <td>@school.SkoleNavn</td>
+                    <td>@school.TeknikerGruppe</td>
+                    <td>@school.CVR</td>
+                    <td>@school.EAN</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<SkoleDataModel> schools;
+
+    protected override async Task OnInitializedAsync()
+    {
+        schools = await _db.GetSkoleData();
+    }
+}

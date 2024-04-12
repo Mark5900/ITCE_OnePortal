@@ -1,13 +1,15 @@
+using OnePortal.Components;
 using DataAccessLibrary;
-using ITCE_OnePortal.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
 builder.Services.AddTransient<ISqlDataAccess, SqlDataAccess>();
 builder.Services.AddTransient<ISkoleData, SkoleData>();
+
 
 var app = builder.Build();
 
