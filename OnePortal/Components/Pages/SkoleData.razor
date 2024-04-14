@@ -1,15 +1,18 @@
 ﻿@page "/SkoleData"
 
 @using DataAccessLibrary
+@rendermode InteractiveServer
 
 @inject ISkoleData _db
 
 <form class="form-container d-flex justify-content-between align-items-center">
     <h1>Skole data oversigt</h1>
-    <a href="/SkoleDataOpret" class="btn btn-primary">Opret skole</a>
+    <a href="/SkoleData/Create" class="btn btn-primary">Opret skole</a>
 </form>
 
-@if (schools is null)
+<input type="text" @bind-value="_searchString" placeholder="Søg..." @bind-value:event="oninput" />
+
+@if (_schools is null)
 {
     <p><em>Loading...</em></p>
 }
@@ -26,7 +29,7 @@ else
             </tr>
         </thead>
         <tbody>
-            @foreach (var school in schools)
+            @foreach (var school in filteredSchools)
             {
                 <tr>
                     <td>@school.SkolePrefix</td>
@@ -41,10 +44,34 @@ else
 }
 
 @code {
-    private List<SkoleDataModel> schools;
+    private List<SkoleDataModel> _schools;
+    private string _searchString = "";
+
+    private List<SkoleDataModel> filteredSchools
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(_searchString))
+            {
+                return _schools;
+            }
+
+            List<SkoleDataModel> tmpList = _schools.Where(
+                s => (s.SkoleNavn?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                    (s.SkolePrefix?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                    (s.TeknikerGruppe?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                    (s.CVR?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                    (s.EAN?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ?? false)
+            ).ToList();
+
+            List<SkoleDataModel> sortedList = tmpList.OrderBy(s => s.SkolePrefix).ToList();
+            return sortedList;
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
-        schools = await _db.GetSkoleData();
+        _schools = await _db.GetSkoleData();
+        _schools = _schools.OrderBy(s => s.SkolePrefix).ToList();
     }
 }

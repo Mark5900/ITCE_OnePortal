@@ -1,0 +1,64 @@
+﻿@page "/SkoleData/Create"
+
+@using DataAccessLibrary
+@rendermode InteractiveServer
+@inject ISkoleData _db
+
+<form class="form-container d-flex justify-content-between align-items-center">
+    <h1>Tilføj en ny skole</h1>
+    <a href="/SkoleData" class="btn btn-primary">Gå tilbage</a>
+</form>
+<EditForm Model="@_newSchool" OnValidSubmit="@InsertSchool">
+    <DataAnnotationsValidator />
+
+    <div class="form-group">
+        <label for="SkolePrefix">Skole prefix</label>
+        <InputText id="SkolePrefix" class="form-control" @bind-Value="_newSchool.SkolePrefix" />
+        <ValidationMessage For="@(() => _newSchool.SkolePrefix)" />
+    </div>
+
+    <div class="form-group">
+        <label for="SkoleNavn">Skole navn</label>
+        <InputText id="SkoleNavn" class="form-control" @bind-Value="_newSchool.SkoleNavn" />
+        <ValidationMessage For="@(() => _newSchool.SkoleNavn)" />
+    </div>
+
+    <div class="form-group">
+        <label for="TeknikerGruppe">Tekniker gruppe</label>
+        <InputText id="TeknikerGruppe" class="form-control" @bind-Value="_newSchool.TeknikerGruppe" />
+        <ValidationMessage For="@(() => _newSchool.TeknikerGruppe)" />
+    </div>
+
+    <div class="form-group">
+        <label for="CVR">CVR</label>
+        <InputText id="CVR" class="form-control"  @bind-Value="_newSchool.CVR" />
+        <ValidationMessage For="@(() => _newSchool.CVR)" />
+    </div>
+
+    <div class="form-group">
+        <label for="EAN">EAN</label>
+        <InputText id="EAN" class="form-control"  @bind-Value="_newSchool.EAN" />
+        <ValidationMessage For="@(() => _newSchool.EAN)" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Opret</button>
+</EditForm>
+
+@code {
+    private DisplaySkoleDataModel _newSchool = new DisplaySkoleDataModel();
+    private async Task InsertSchool()
+    {
+        SkoleDataModel school = new SkoleDataModel
+            {
+                SkolePrefix = _newSchool.SkolePrefix,
+                SkoleNavn = _newSchool.SkoleNavn,
+                TeknikerGruppe = _newSchool.TeknikerGruppe,
+                CVR = _newSchool.CVR,
+                EAN = _newSchool.EAN
+            };
+
+        await _db.InsertSkoleData(school);
+
+        _newSchool = new DisplaySkoleDataModel();
+    }
+}
