@@ -1,3 +1,6 @@
+USE ApplicationDB
+GO
+
 CREATE TABLE [dbo].[CM_SubCategories](
 	[SubCatID] [int] IDENTITY(1,1) NOT NULL,
 	[Name] [varchar](200) NOT NULL,

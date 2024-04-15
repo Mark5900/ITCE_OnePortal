@@ -1,3 +1,6 @@
+USE ApplicationDB
+GO
+
 INSERT [dbo].[SkoleData]
 	([SkolePrefix], [SkoleNavn], [TeknikerGruppe], [CVR], [EAN])
 VALUES

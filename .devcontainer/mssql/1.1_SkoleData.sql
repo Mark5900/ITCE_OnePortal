@@ -1,3 +1,6 @@
+USE ApplicationDB
+GO
+
 CREATE TABLE [dbo].[SkoleData](
 	[SkolePrefix] [varchar](255) NOT NULL,
 	[SkoleNavn] [varchar](255) NOT NULL,

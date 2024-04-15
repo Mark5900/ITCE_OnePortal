@@ -1,3 +1,6 @@
+USE ApplicationDB
+GO
+
 CREATE TABLE [dbo].[CM_Comments](
 	[ComID] [int] IDENTITY(1,1) NOT NULL,
 	[ChanID] [int] NOT NULL,

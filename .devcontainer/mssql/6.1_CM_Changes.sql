@@ -1,3 +1,6 @@
+USE ApplicationDB
+GO
+
 CREATE TABLE [dbo].[CM_Changes](
 	[ChanID] [int] IDENTITY(1,1) NOT NULL,
 	[CallID] [int] NOT NULL,

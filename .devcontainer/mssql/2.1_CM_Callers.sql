@@ -1,3 +1,6 @@
+USE ApplicationDB
+GO
+
 CREATE TABLE [dbo].[CM_Callers](
 	[CallID] [int] IDENTITY(1,1) NOT NULL,
 	[SkolePrefix] [varchar](255) NOT NULL,

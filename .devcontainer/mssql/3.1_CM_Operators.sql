@@ -1,3 +1,6 @@
+USE ApplicationDB
+GO
+
 CREATE TABLE [dbo].[CM_Operators](
 	[OpID] [int] IDENTITY(1,1) NOT NULL,
 	[ChangeApprover] [bit] NULL,
