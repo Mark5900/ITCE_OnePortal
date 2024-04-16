@@ -18,8 +18,11 @@ public class SkoleData : ISkoleData
 
     public Task InsertSkoleData(SkoleDataModel skoleData)
     {
-        const string sql = @"INSERT INTO dbo.SkoleData (SkolePrefix, SkoleNavn, TeknikerGruppe, CVR, EAN)
-                             VALUES (@SkolePrefix, @SkoleNavn, @TeknikerGruppe, @CVR, @EAN);";
+        const string sql = @"
+            INSERT INTO dbo.SkoleData (SkolePrefix, SkoleNavn, TeknikerGruppe, CVR, EAN)
+            VALUES (@SkolePrefix, @SkoleNavn, @TeknikerGruppe, 
+                    CASE WHEN @CVR IS NULL OR @CVR = '' THEN NULL ELSE CAST(@CVR AS NUMERIC) END, 
+                    CASE WHEN @EAN IS NULL OR @EAN = '' THEN NULL ELSE CAST(@EAN AS NUMERIC) END);";
 
         return _db.SaveData(sql, skoleData);
     }
