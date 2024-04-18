@@ -10,4 +10,8 @@
     <ProjectReference Include="..\DataAccessLibrary\DataAccessLibrary.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />
+  </ItemGroup>
+
 </Project>
