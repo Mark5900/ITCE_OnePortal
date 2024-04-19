@@ -17,6 +17,7 @@ builder.Logging.AddSerilog();
 
 builder.Services.AddTransient<ISqlDataAccess, SqlDataAccess>();
 builder.Services.AddTransient<ISkoleData, SkoleData>();
+builder.Services.AddTransient<ICM_Comments, CM_Comments>();
 
 var app = builder.Build();
 

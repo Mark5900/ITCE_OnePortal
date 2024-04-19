@@ -1,8 +1,8 @@
 ﻿namespace DataAccessLibrary;
 
-public class Comment
+public class CommentModel
 {
     public int ComID { get; set; }
     public OperatorModel Operator { get; set; }
-    public string CommentText { get; set; }
+    public string Comment { get; set; }
 }

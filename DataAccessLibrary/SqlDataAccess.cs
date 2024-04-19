@@ -32,6 +32,28 @@ public class SqlDataAccess : ISqlDataAccess
             return data.ToList();
         }
     }
+    public async Task<List<TResult>> LoadData<TFirst, TSecond, TResult, U>(string sql, U parameters, Func<TFirst, TSecond, TResult> map, string splitOn)
+    {
+        string connectionString = _config.GetConnectionString(ConnectionStringName);
+
+        using (IDbConnection connection = new SqlConnection(connectionString))
+        {
+            var data = await connection.QueryAsync(sql, map, parameters, splitOn: splitOn);
+
+            return data.ToList();
+        }
+    }
+    public async Task<T> LoadSingleData<T, U>(string sql, U parameters)
+    {
+        string connectionString = _config.GetConnectionString(ConnectionStringName);
+
+        using (IDbConnection connection = new SqlConnection(connectionString))
+        {
+            var data = await connection.QueryFirstOrDefaultAsync<T>(sql, parameters);
+
+            return data;
+        }
+    }
 
     public async Task SaveData<T>(string sql, T parameters)
     {

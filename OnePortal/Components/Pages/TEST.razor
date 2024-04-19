@@ -1,0 +1,59 @@
+﻿@page "/Test"
+@using DataAccessLibrary
+@rendermode InteractiveServer
+@inject ICM_Comments _db
+
+<h3>TEST</h3>
+
+@if (_comments is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ComID</th>
+                <th>Comment</th>
+                <th>OpID</th>
+                <th>ChangeApprover</th>
+                <th>CallId</th>
+                <th>SkolePrefix</th>
+                <th>ADTelephoneNumber</th>
+                <th>AlternativNumber1</th>
+                <th>AlternativNumber2</th>
+                <th>Email</th>
+                <th>UPN</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var comment in _comments)
+            {
+                <tr>
+                    <td>@comment.ComID</td>
+                    <td>@comment.Comment</td>
+                    <td>@comment.Operator.OpID</td>
+                    <td>@comment.Operator.ChangeApprover</td>
+                    <td>@comment.Operator.CallId</td>
+                    <td>@comment.Operator.SkolePrefix</td>
+                    <td>@comment.Operator.ADTelephoneNumber</td>
+                    <td>@comment.Operator.AlternativNumber1</td>
+                    <td>@comment.Operator.AlternativNumber2</td>
+                    <td>@comment.Operator.Email</td>
+                    <td>@comment.Operator.UPN</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<CommentModel> _comments;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _comments = await _db.GetComments(1);
+    }
+
+}
