@@ -14,4 +14,5 @@ public class ChangeModel
     public OperatorModel Operator { get; set; }
     public bool IsTemplate { get; set; }
     public bool NeedApproval { get; set; }
+    public List<CommentModel> Comments { get; set; } = new List<CommentModel>();
 }
