@@ -1,5 +1,6 @@
 using OnePortal.Components;
 using DataAccessLibrary;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,9 +8,17 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.File("logs\\log.log", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 30)
+    .CreateLogger();
+builder.Logging.ClearProviders();
+builder.Logging.AddSerilog();
+
 builder.Services.AddTransient<ISqlDataAccess, SqlDataAccess>();
 builder.Services.AddTransient<ISkoleData, SkoleData>();
-
+builder.Services.AddTransient<ICM_Comments, CM_Comments>();
+builder.Services.AddTransient<ICM_Changes, CM_Changes>();
 
 var app = builder.Build();
 

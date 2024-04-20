@@ -11,19 +11,19 @@ public class SkoleData : ISkoleData
 
     public Task<List<SkoleDataModel>> GetSkoleData()
     {
-        const string sql = "SELECT * FROM dbo.SkoleData";
+        const string query = "SELECT * FROM dbo.SkoleData";
 
-        return _db.LoadData<SkoleDataModel, dynamic>(sql, new { });
+        return _db.LoadData<SkoleDataModel, dynamic>(query, new { });
     }
 
     public Task InsertSkoleData(SkoleDataModel skoleData)
     {
-        const string sql = @"
+        const string query = @"
             INSERT INTO dbo.SkoleData (SkolePrefix, SkoleNavn, TeknikerGruppe, CVR, EAN)
             VALUES (@SkolePrefix, @SkoleNavn, @TeknikerGruppe, 
                     CASE WHEN @CVR IS NULL OR @CVR = '' THEN NULL ELSE CAST(@CVR AS NUMERIC) END, 
                     CASE WHEN @EAN IS NULL OR @EAN = '' THEN NULL ELSE CAST(@EAN AS NUMERIC) END);";
 
-        return _db.SaveData(sql, skoleData);
+        return _db.SaveData(query, skoleData);
     }
 }
