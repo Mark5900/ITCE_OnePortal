@@ -7,63 +7,7 @@
 
 <PageTitle>Home</PageTitle>
 
-<h1>Current changes</h1>
-@if (_changes is null)
-{
-    <p><em>Loading...</em></p>
-}
-else
-{
-    <table class="table">
-    <thead>
-        <tr>
-            <th>ChanID</th>
-            <th>Caller UPN</th>
-            <th>Brief Description</th>
-            <th>Category</th>
-            <th>Sub Category</th>
-            <th>Description</th>
-            <th>Start Date</th>
-            <th>Implemented Time</th>
-            <th>Status</th>
-            <th>Approved by approver</th>
-            <th>Operator UPN</th>
-            <th>Is template</th>
-            <th>Need approval</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var change in _changes)
-            {
-                <tr @ondblclick="() => NavigateToDetails(change.ChanID)">
-                    <td>@change.ChanID</td>
-                    <td>@change.Caller.UPN</td>
-                    <td>@change.BriefDescription</td>
-                    <td>@change.SubCategory.Category</td>
-                    <td>@change.SubCategory.Name</td>
-                    <td>@change.Description</td>
-                    <td>@change.StartTime</td>
-                    <td>@change.ImplementedTime</td>
-                    <td>@change.Status</td>
-                    <td>@change.ApprovedByApprover</td>
-                    <td>@change.Operator.UPN</td>
-                    <td>@change.IsTemplate</td>
-                    <td>@change.NeedApproval</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+<ChangeList />
 
 @code {
-    private List<ChangeModel> _changes;
-
-    protected override async Task OnInitializedAsync() {
-        _changes  = await _dbChanges.GetChanges();
-    }
-
-    void NavigateToDetails(int chanId)
-    {
-        NavigationManager.NavigateTo($"/Changes/{chanId}");
-    }
 }

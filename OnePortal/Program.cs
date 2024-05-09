@@ -1,6 +1,9 @@
 using OnePortal.Components;
 using DataAccessLibrary;
 using Serilog;
+using Blazorise;
+using Blazorise.Bootstrap;
+using Blazorise.Icons.FontAwesome;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +17,14 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 builder.Logging.ClearProviders();
 builder.Logging.AddSerilog();
+
+builder.Services
+    .AddBlazorise( options =>
+    {
+        options.Immediate = true;
+    } )
+    .AddBootstrapProviders()
+    .AddFontAwesomeIcons();
 
 builder.Services.AddTransient<ISqlDataAccess, SqlDataAccess>();
 builder.Services.AddTransient<ISkoleData, SkoleData>();

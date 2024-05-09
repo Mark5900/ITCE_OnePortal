@@ -1,8 +1,106 @@
 ﻿@page "/Changes/{ChanID}"
+@using DataAccessLibrary
+@rendermode InteractiveServer
+@inject ICM_Changes _dbChanges
 
 <h1>Change ID: @ChanID</h1>
+@if (_change is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+    <thead>
+        <tr>
+            <th>ChanID</th>
+            <th>Caller UPN</th>
+            <th>Brief Description</th>
+            <th>Category</th>
+            <th>Sub Category</th>
+            <th>Description</th>
+            <th>Start Date</th>
+            <th>Implemented Time</th>
+            <th>Status</th>
+            <th>Approved by approver</th>
+            <th>Operator UPN</th>
+            <th>Is template</th>
+            <th>Need approval</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>@_change.ChanID</td>
+            <td>@_change.Caller.UPN</td>
+            <td>@_change.BriefDescription</td>
+            <td>@_change.SubCategory.Category</td>
+            <td>@_change.SubCategory.Name</td>
+            <td>@_change.Description</td>
+            <td>@_change.StartTime</td>
+            <td>@_change.ImplementedTime</td>
+            <td>@_change.Status</td>
+            <td>@_change.ApprovedByApprover</td>
+            <td>@_change.Operator.UPN</td>
+            <td>@_change.IsTemplate</td>
+            <td>@_change.NeedApproval</td>
+        </tr>
+    </tbody>
+</table>
+}
+
+<h3>Comments</h3>
+@if (_change is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+    <thead>
+        <tr>
+            <th>ComID</th>
+            <th>Comment</th>
+            <th>OpID</th>
+            <th>ChangeApprover</th>
+            <th>CallId</th>
+            <th>SkolePrefix</th>
+            <th>ADTelephoneNumber</th>
+            <th>AlternativNumber1</th>
+            <th>AlternativNumber2</th>
+            <th>Email</th>
+            <th>UPN</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var comment in _change.Comments)
+            {
+                <tr>
+                    <td>@comment.ComID</td>
+                    <td>@comment.Comment</td>
+                    <td>@comment.Operator.OpID</td>
+                    <td>@comment.Operator.ChangeApprover</td>
+                    <td>@comment.Operator.CallId</td>
+                    <td>@comment.Operator.SkolePrefix</td>
+                    <td>@comment.Operator.ADTelephoneNumber</td>
+                    <td>@comment.Operator.AlternativNumber1</td>
+                    <td>@comment.Operator.AlternativNumber2</td>
+                    <td>@comment.Operator.Email</td>
+                    <td>@comment.Operator.UPN</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
 
 @code {
     [Parameter]
     public string ChanID { get; set; }
+    public int ChanIDInt => int.TryParse(ChanID, out var chanId) ? chanId : -1;
+
+    private ChangeModel _change;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _change = await _dbChanges.GetChange(ChanIDInt);
+    }
 }

@@ -1,0 +1,98 @@
+﻿@using DataAccessLibrary
+@using Blazorise.DataGrid
+@inject ICM_Changes _dbChanges
+@inject NavigationManager NavigationManager
+
+@rendermode InteractiveServer
+
+<h1>Current changes</h1>
+@if (_changes is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="gridChangeList">
+        <DataGrid TItem="ChangeModel" Data="_changes.AsQueryable()" Sortable="true"
+            RowDoubleClicked="@OnRowDoubleClicked">
+            <DataGridColumn TItem="ChangeModel" Field="ChanID" Sortable="true" Caption="ID" />
+            <DataGridColumn TItem="ChangeModel" Field="Caller.UPN" Sortable="true" Caption="Caller" />
+            <DataGridColumn TItem="ChangeModel" Field="BriefDescription" Sortable="true" Caption="Description" />
+            <DataGridColumn TItem="ChangeModel" Field="SubCategory.Category" Sortable="true" Caption="Category" />
+            <DataGridColumn TItem="ChangeModel" Field="SubCategory.Name" Sortable="true" Caption="Subcategory" />
+            <DataGridColumn TItem="ChangeModel" Field="StartTime" Sortable="true" Caption="Start time" />
+        </DataGrid>
+    </div>
+
+}
+
+@code {
+    private List<ChangeModel> _changes;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _changes = await _dbChanges.GetChanges();
+    }
+
+    void OnRowDoubleClicked(DataGridRowMouseEventArgs<ChangeModel> e)
+    {
+        var id = e.Item.ChanID;
+        NavigationManager.NavigateTo($"/changes/{id}");
+    }
+}
+
+<style>
+    .gridChangeList {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: Arial, sans-serif;
+    }
+
+    .gridChangeList th,
+    .gridChangeList td {
+        border: 1px solid #ddd;
+        padding: 8px;
+    }
+
+    .gridChangeList tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+
+    .gridChangeList tr:hover {
+        background-color: #ddd;
+    }
+
+    .gridChangeList td {
+        text-align: right;
+    }
+
+    .page-buttons {
+        margin: 1rem 0;
+        align-items: center;
+    }
+
+    .page-buttons button {
+        background: #d6d7d8;
+        color: black;
+        padding: 0.25rem 0.75rem;
+        border-radius: 0.4rem;
+        transition: transform 0.3s ease-out;
+        margin: 0.25rem;
+    }
+
+    .page-buttons button:active {
+        background: #a7c1ff !important;
+        color: white;
+        transform: scale(0.95) translateY(-0.15rem);
+        transition-duration: 0.05s;
+    }
+
+    .page-buttons button:hover:not(.current) {
+        background: #c0c9dc;
+    }
+
+    .page-buttons button.current {
+        background: #3771f4;
+        color: white;
+    }
+</style>
