@@ -2,105 +2,127 @@
 @using DataAccessLibrary
 @rendermode InteractiveServer
 @inject ICM_Changes _dbChanges
+@inject ICM_SubCategories _dbSubCategories
+@inject CM_Categories _dbCategories
 
 <h1>Change ID: @ChanID</h1>
-@if (_change is null)
-{
-    <p><em>Loading...</em></p>
-}
-else
-{
-    <table class="table">
-    <thead>
-        <tr>
-            <th>ChanID</th>
-            <th>Caller UPN</th>
-            <th>Brief Description</th>
-            <th>Category</th>
-            <th>Sub Category</th>
-            <th>Description</th>
-            <th>Start Date</th>
-            <th>Implemented Time</th>
-            <th>Status</th>
-            <th>Approved by approver</th>
-            <th>Operator UPN</th>
-            <th>Is template</th>
-            <th>Need approval</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>@_change.ChanID</td>
-            <td>@_change.Caller.UPN</td>
-            <td>@_change.BriefDescription</td>
-            <td>@_change.SubCategory.Category</td>
-            <td>@_change.SubCategory.Name</td>
-            <td>@_change.Description</td>
-            <td>@_change.StartTime</td>
-            <td>@_change.ImplementedTime</td>
-            <td>@_change.Status</td>
-            <td>@_change.ApprovedByApprover</td>
-            <td>@_change.Operator.UPN</td>
-            <td>@_change.IsTemplate</td>
-            <td>@_change.NeedApproval</td>
-        </tr>
-    </tbody>
-</table>
-}
 
-<h3>Comments</h3>
-@if (_change is null)
-{
-    <p><em>Loading...</em></p>
-}
-else
-{
-    <table class="table">
-    <thead>
-        <tr>
-            <th>ComID</th>
-            <th>Comment</th>
-            <th>OpID</th>
-            <th>ChangeApprover</th>
-            <th>CallId</th>
-            <th>SkolePrefix</th>
-            <th>ADTelephoneNumber</th>
-            <th>AlternativNumber1</th>
-            <th>AlternativNumber2</th>
-            <th>Email</th>
-            <th>UPN</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var comment in _change.Comments)
-            {
-                <tr>
-                    <td>@comment.ComID</td>
-                    <td>@comment.Comment</td>
-                    <td>@comment.Operator.OpID</td>
-                    <td>@comment.Operator.ChangeApprover</td>
-                    <td>@comment.Operator.CallId</td>
-                    <td>@comment.Operator.SkolePrefix</td>
-                    <td>@comment.Operator.ADTelephoneNumber</td>
-                    <td>@comment.Operator.AlternativNumber1</td>
-                    <td>@comment.Operator.AlternativNumber2</td>
-                    <td>@comment.Operator.Email</td>
-                    <td>@comment.Operator.UPN</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+<div class="content-container">
+    <div class="left-side">
+    @if (_change is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else
+    {
+
+        <div class="caller">
+            <p style="font-size: 20px; font-weight: bold;">@_change.Caller.UPN</p>
+            <p>@_change.Caller.SkolePrefix</p>
+            <p>📱@_change.Caller.ADTelephoneNumber</p>
+            <p>📱@_change.Caller.AlternativNumber1</p>
+            <p>📱@_change.Caller.AlternativNumber2</p>
+            <p>📧@_change.Caller.Email</p>
+        </div>
+        <div class="details">
+            <p style="font-size: 20px; font-weight: bold;">@_change.BriefDescription</p>
+
+            <select @bind="_change.SubCategory.CatID" @bind:event="oninput" @onchange="OnSelectionChangedCategories">
+                @foreach (var category in _categories)
+                {
+                    <option value="@category.CatID">@category.Category</option>
+                }
+            </select>
+
+            <select class="@selectClassSubCat" @bind="_change.SubCategory.SubCatID" @bind:event="oninput" @onchange="OnSelectionChangedSubCategories">
+                @if (_categoryChanged)
+                {
+                    <option selected disabled>Vælg en underkategori</option>
+                }
+                @foreach (var subCategory in _subCategories)
+                {
+                    <option value="@subCategory.SubCatID" selected="@(_categoryChanged ? null : (_change.SubCategory.SubCatID == subCategory.SubCatID ? "selected" : null))">@subCategory.Name</option>
+                }
+</select>
+        </div>
+        <div class="planning">
+            <p>@_change.StartTime</p>
+            <p>@_change.ImplementedTime</p>
+        </div>
+            <div class="processing">
+            <p>@_change.Operator.UPN</p>
+            <p>@_change.Status</p>
+        </div>
+
+    }
+    </div>
+
+    <div class="right-side">
+        @if (_change is null)
+        {
+            <p><em>Loading...</em></p>
+        }
+        else
+        {
+            <div class="description">
+                <p>@_change.Description</p>
+            </div>
+
+            <p>Test</p>
+        }
+    </div>
+</div>
 
 @code {
     [Parameter]
     public string ChanID { get; set; }
     public int ChanIDInt => int.TryParse(ChanID, out var chanId) ? chanId : -1;
-
     private ChangeModel _change;
+    private List<CategoryModel> _categories;
+    private List<SubCategoryModel> _subCategories;
+    private bool _categoryChanged = false;
+    private string selectClassSubCat => _categoryChanged ? "red-select" : "";
 
     protected override async Task OnInitializedAsync()
     {
         _change = await _dbChanges.GetChange(ChanIDInt);
+        _categories = await _dbCategories.GetCategories();
+        _subCategories = await _dbSubCategories.GetSubCategoriesByCategory(_change.SubCategory.CatID);
+    }
+    void OnSelectionChangedSubCategories(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value.ToString(), out var selectedOption))
+        {
+            _change.SubCategory = _subCategories.FirstOrDefault(x => x.SubCatID == selectedOption);
+            _categoryChanged = false;
+        }
+    }
+
+    async Task OnSelectionChangedCategories(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value.ToString(), out var selectedOption))
+        {
+            _subCategories  = await _dbSubCategories.GetSubCategoriesByCategory(selectedOption);
+            _categoryChanged = true;
+        }
     }
 }
+
+<style>
+    .content-container {
+        display: flex;
+        flex-direction: row;
+    }
+
+    .left-side {
+        flex: 1;
+    }
+
+    .right-side {
+        flex: 2;
+    }
+
+    .red-select {
+        background-color: red;
+    }
+</style>
