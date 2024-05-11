@@ -30,7 +30,7 @@ builder.Services.AddTransient<ISqlDataAccess, SqlDataAccess>();
 builder.Services.AddTransient<ISkoleData, SkoleData>();
 builder.Services.AddTransient<ICM_Comments, CM_Comments>();
 builder.Services.AddTransient<ICM_Changes, CM_Changes>();
-builder.Services.AddTransient<CM_Categories>();
+builder.Services.AddTransient<ICM_Categories, CM_Categories>();
 builder.Services.AddTransient<ICM_SubCategories, CM_SubCategories>();
 
 var app = builder.Build();
