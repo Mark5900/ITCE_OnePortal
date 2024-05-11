@@ -13,53 +13,60 @@
 
 <div class="content-container">
     <div class="left-side">
-    @if (_change is null)
-    {
-        <p><em>Loading...</em></p>
-    }
-    else
-    {
+        @if (_change is null)
+        {
+            <p><em>Loading...</em></p>
+        }
+        else
+        {
 
-        <div class="caller">
-            <p style="font-size: 20px; font-weight: bold;">@_change.Caller.UPN</p>
-            <p>@_change.Caller.SkolePrefix</p>
-            <p>📱@_change.Caller.ADTelephoneNumber</p>
-            <p>📱@_change.Caller.AlternativNumber1</p>
-            <p>📱@_change.Caller.AlternativNumber2</p>
-            <p>📧@_change.Caller.Email</p>
-        </div>
-        <div class="details">
+            <div class="caller">
+                <p style="font-size: 20px; font-weight: bold;">@_change.Caller.UPN</p>
+                <p>@_change.Caller.SkolePrefix</p>
+                <p>📱@_change.Caller.ADTelephoneNumber</p>
+                <p>📱@_change.Caller.AlternativNumber1</p>
+                <p>📱@_change.Caller.AlternativNumber2</p>
+                <p>📧@_change.Caller.Email</p>
+            </div>
+            <div class="details">
             <p style="font-size: 20px; font-weight: bold;">@_change.BriefDescription</p>
 
             <select @bind="_change.SubCategory.CatID" @bind:event="oninput" @onchange="OnSelectionChangedCategories">
                 @foreach (var category in _categories)
-                {
-                    <option value="@category.CatID">@category.Category</option>
-                }
-            </select>
+                    {
+                        <option value="@category.CatID">@category.Category</option>
+                    }
+                </select>
 
-            <select class="@selectClassSubCat" @bind="_change.SubCategory.SubCatID" @bind:event="oninput" @onchange="OnSelectionChangedSubCategories">
-                @if (_categoryChanged)
-                {
-                    <option selected disabled>Vælg en underkategori</option>
-                }
-                @foreach (var subCategory in _subCategories)
-                {
-                    <option value="@subCategory.SubCatID" selected="@(_categoryChanged ? null : (_change.SubCategory.SubCatID == subCategory.SubCatID ? "selected" : null))">@subCategory.Name</option>
-                }
-</select>
-        </div>
-        <div class="planning">
-            <p>@_change.StartTime</p>
-            <p>@_change.ImplementedTime</p>
-        </div>
+                <select class="@selectClassSubCat" @bind="_change.SubCategory.SubCatID" @bind:event="oninput"
+                    @onchange="OnSelectionChangedSubCategories">
+                    @if (_categoryChanged)
+                    {
+                        <option selected disabled>Vælg en underkategori</option>
+                    }
+                    @foreach (var subCategory in _subCategories)
+                    {
+                        <option value="@subCategory.SubCatID"
+                            selected="@(_categoryChanged ? null : (_change.SubCategory.SubCatID == subCategory.SubCatID ? "selected" : null))">
+                            @subCategory.Name</option>
+                    }
+                </select>
+            </div>
+
+            <div class="planning">
+                <input type="datetime-local" @bind="_change.StartTime" @bind:event="oninput" id="startTime"  @onblur="CheckTime"/>
+
+                <input type="datetime-local" @bind="_change.ImplementedTime" @bind:event="oninput" id="implementedTime"
+                    @onblur="CheckTime" class="@implementedTimeClass"/>
+            </div>
+
             <div class="processing">
             <p>@_change.Operator.UPN</p>
             <p>@_change.Operator.OpID</p>
             <p>@_change.Status</p>
         </div>
 
-    }
+        }
     </div>
 
     <div class="right-side">
@@ -73,25 +80,25 @@
                 <p>@_change.Description</p>
             </div>
 
-    <table class="table">
-    <thead>
-        <tr>
-            <th>ComID</th>
-            <th>Comment</th>
-            <th>OpID</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var comment in _change.Comments)
-            {
+            <table class="table">
+            <thead>
                 <tr>
-                    <td>@comment.ComID</td>
-                    <td>@comment.Comment</td>
-                    <td>@comment.Operator.OpID</td>
+                    <th>ComID</th>
+                    <th>Comment</th>
+                    <th>OpID</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var comment in _change.Comments)
+                    {
+                        <tr>
+                            <td>@comment.ComID</td>
+                            <td>@comment.Comment</td>
+                            <td>@comment.Operator.OpID</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
 
             <p>Category: @_change.SubCategory.Category</p>
             <p>SubCategory: @_change.SubCategory.Name</p>
@@ -109,7 +116,7 @@
     private bool _categoryChanged = false;
     private string selectClassSubCat => _categoryChanged ? "red-select" : "";
     private bool _changeHasChanged = false;
-
+    private string implementedTimeClass = "";
     protected override async Task OnInitializedAsync()
     {
         _change = await _dbChanges.GetChange(ChanIDInt);
@@ -130,16 +137,30 @@
     {
         if (int.TryParse(e.Value.ToString(), out var selectedOption))
         {
-            _subCategories  = await _dbSubCategories.GetSubCategoriesByCategory(selectedOption);
+            _subCategories = await _dbSubCategories.GetSubCategoriesByCategory(selectedOption);
             _categoryChanged = true;
         }
     }
 
-        private async void ButtonSaveClicked()
+    private async void ButtonSaveClicked()
     {
         await _dbChanges.UpdateChange(_change);
         _changeHasChanged = false;
         _logger.LogInformation($"Change with ID {_change.ChanID} was updated");
+    }
+
+        private void CheckTime()
+    {
+        if (_change.ImplementedTime < _change.StartTime)
+        {
+            implementedTimeClass = "error";
+            _changeHasChanged = false;
+        }
+        else
+        {
+            implementedTimeClass = "";
+            _changeHasChanged = true;
+        }
     }
 }
 
@@ -158,6 +179,30 @@
     }
 
     .red-select {
+        background-color: red;
+    }
+
+    .caller {
+        border-bottom: 1px solid lightgray;
+        padding: 10px;
+    }
+
+    .details {
+        border-bottom: 1px solid lightgray;
+        padding: 10px;
+    }
+
+    .planning {
+        border-bottom: 1px solid lightgray;
+        padding: 10px;
+    }
+
+    .processing {
+        padding: 10px;
+    }
+
+    .error {
+        border-color: red;
         background-color: red;
     }
 </style>
