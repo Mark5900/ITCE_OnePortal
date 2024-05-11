@@ -74,5 +74,6 @@ else
     {
         _schools = await _db.GetSkoleData();
         _schools = _schools.OrderBy(s => s.SkolePrefix).ToList();
+        
     }
 }

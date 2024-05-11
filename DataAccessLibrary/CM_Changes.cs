@@ -60,4 +60,44 @@ public class CM_Changes : ICM_Changes
 
         return change.FirstOrDefault();
     }
+
+public async Task UpdateChange(ChangeModel change){
+    string query = @"
+        UPDATE dbo.CM_Changes
+        SET CallID = @CallID, 
+        BriefDescription = @BriefDescription,
+        SubCatID = @SubCatID,
+        Description = @Description,
+        StartTime = @StartTime,
+        ImplementedTime = @ImplementedTime,
+        Status = @Status,
+        ApprovedByApprover = @ApprovedByApprover,
+        OpID = @OpID,
+        IsTemplate = @IsTemplate,
+        NeedApproval = @NeedApproval
+        WHERE ChanID = @ChanID";
+
+    var parameters = new
+    {
+        CallID = change.Caller.CallId,
+        BriefDescription = change.BriefDescription,
+        SubCatID = change.SubCategory.SubCatID,
+        Description = change.Description,
+        StartTime = change.StartTime,
+        ImplementedTime = change.ImplementedTime,
+        Status = change.Status,
+        ApprovedByApprover = change.ApprovedByApprover,
+        OpID = change.Operator.OpID,
+        IsTemplate = change.IsTemplate,
+        NeedApproval = change.NeedApproval,
+        ChanID = change.ChanID
+    };
+
+    await _db.SaveData(query, parameters);
+
+    foreach (var comment in change.Comments)
+    {
+        await new CM_Comments(_db).UpdateComment(comment);
+    }
+}
 }

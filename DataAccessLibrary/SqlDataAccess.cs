@@ -96,5 +96,17 @@ public class SqlDataAccess : ISqlDataAccess
             await connection.ExecuteAsync(sql, parameters);
         }
     }
+
+    public async Task<List<TResult>> LoadData<TFirst, TSecond, TThird, TResult>(string sql, dynamic parameters, Func<TFirst, TSecond, TThird, TResult> map, string splitOn)
+{
+    string connectionString = _config.GetConnectionString(ConnectionStringName);
+
+    using (IDbConnection connection = new SqlConnection(connectionString))
+    {
+        var data = await connection.QueryAsync<TFirst, TSecond, TThird, TResult>(sql, map, (object)parameters, splitOn: splitOn);
+
+        return data.ToList();
+    }
+}
 }
 

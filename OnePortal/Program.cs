@@ -13,7 +13,7 @@ builder.Services.AddRazorComponents()
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
-    .WriteTo.File("logs\\log.log", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 30)
+    .WriteTo.File("logs/log.log", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 30)
     .CreateLogger();
 builder.Logging.ClearProviders();
 builder.Logging.AddSerilog();
