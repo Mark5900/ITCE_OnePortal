@@ -19,7 +19,7 @@ public async Task<List<CommentModel>> GetComments(int ChanID)
 
     var commentList = new List<CommentModel>();
 
-    await _db.LoadData<CommentModel, OperatorModel, OperatorModel, dynamic>(query, new { ChanID },
+    await _db.LoadData<CommentModel, OperatorModel, OperatorModel, dynamic, dynamic>(query, new { ChanID },
         (com, op, ca) =>
         {
             op.CallId = ca.CallId;

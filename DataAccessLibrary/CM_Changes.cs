@@ -38,22 +38,30 @@ public class CM_Changes : ICM_Changes
     public async Task<ChangeModel> GetChange(int ChanID)
     {
         string query = @"
-            SELECT cha.*, ca.*, sub.*, op.*
+            SELECT cha.*, ca.*, sub.*, op.*, ca_op.*
             FROM dbo.CM_Changes cha
             INNER JOIN dbo.CM_Callers ca ON cha.CallID = ca.CallID
             INNER JOIN dbo.CM_SubCategories sub ON cha.SubCatID = sub.SubCatID
             INNER JOIN dbo.CM_Categories cat ON sub.CatID = cat.CatID
             INNER JOIN dbo.CM_Operators op ON cha.OpID = op.OpID
-            WHERE cha.ChanID = " + ChanID;
+            INNER JOIN dbo.CM_Callers ca_op ON op.CallID = ca_op.CallID
+            WHERE cha.ChanID = @ChanID";
 
-        var change = await _db.LoadData<ChangeModel, CallerModel, SubCategoryModel, OperatorModel, ChangeModel, dynamic>(query, new { },
-            (cha, ca, sub, op) =>
+        var change = await _db.LoadData<ChangeModel, CallerModel, SubCategoryModel, OperatorModel, CallerModel, ChangeModel, dynamic>(query, new { ChanID },
+            (cha, ca, sub, op, ca_op) =>
             {
                 cha.Caller = ca;
                 cha.SubCategory = sub;
+                op.CallId = ca_op.CallId;
+                op.SkolePrefix = ca_op.SkolePrefix;
+                op.ADTelephoneNumber = ca_op.ADTelephoneNumber;
+                op.AlternativNumber1 = ca_op.AlternativNumber1;
+                op.AlternativNumber2 = ca_op.AlternativNumber2;
+                op.Email = ca_op.Email;
+                op.UPN = ca_op.UPN;
                 cha.Operator = op;
                 return cha;
-            }, splitOn: "CallID,SubCatID,OpID");
+            }, splitOn: "CallID,SubCatID,OpID,CallID");
 
         List<CommentModel> comments = await new CM_Comments(_db).GetComments(ChanID);
         change.FirstOrDefault().Comments = comments;

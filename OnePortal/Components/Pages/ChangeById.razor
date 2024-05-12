@@ -4,6 +4,7 @@
 @inject ICM_Changes _dbChanges
 @inject ICM_SubCategories _dbSubCategories
 @inject ICM_Categories _dbCategories
+@inject ICM_Operators _dbOperators
 @inject ILogger<ChangeById> _logger
 
 <form class="form-container d-flex justify-content-between align-items-center">
@@ -61,10 +62,30 @@
             </div>
 
             <div class="processing">
-            <p>@_change.Operator.UPN</p>
-            <p>@_change.Operator.OpID</p>
-            <p>@_change.Status</p>
-        </div>
+                <select @bind="_change.Operator.OpID" @bind:event="oninput">
+                    @foreach (var op in _operators)
+                    {
+                        <option value="@op.OpID">@op.UPN</option>
+                    }
+                </select>
+
+            
+            <select @bind="@_change.Status" @bind:event="oninput" @onchange="OnSelectionChangedStatus">
+                <option value="Ikke godkendt">Ikke godkendt</option>
+                <option value="Godkendt">Godkendt</option>
+                @if (_change.NeedApproval == false || _change.ApprovedByApprover)
+                {
+                    <option value="Ikke påbegyndt">Ikke påbegyndt</option>
+                    <option value="Påbegyndt">Påbegyndt</option>
+                    <option value="Afventer">Afventer</option>
+                    <option value="Afsluttet">Afsluttet</option>
+                }
+            </select>
+
+            <p>@_change.ApprovedByApprover</p>
+            <p>@_change.NeedApproval</p>
+
+            </div>
 
         }
     </div>
@@ -113,6 +134,7 @@
     private ChangeModel _change;
     private List<CategoryModel> _categories;
     private List<SubCategoryModel> _subCategories;
+    private List<OperatorModel> _operators;
     private bool _categoryChanged = false;
     private string selectClassSubCat => _categoryChanged ? "red-select" : "";
     private bool _changeHasChanged = false;
@@ -123,6 +145,7 @@
         _change = await _dbChanges.GetChange(ChanIDInt);
         _categories = await _dbCategories.GetCategories();
         _subCategories = await _dbSubCategories.GetSubCategoriesByCategory(_change.SubCategory.CatID);
+        _operators = await _dbOperators.GetOperators();
     }
     void OnSelectionChangedSubCategories(ChangeEventArgs e)
     {
@@ -178,6 +201,17 @@
             _changeHasChanged = true;
             _change.BriefDescription = temp;
         }
+    }
+
+    private void OnSelectionChangedStatus(ChangeEventArgs e)
+    {
+        if (e.Value.ToString() == "Godkendt")
+        {
+            _change.ApprovedByApprover= true;
+        }
+
+        _change.Status = e.Value.ToString();
+        _changeHasChanged = true;
     }
 }
 

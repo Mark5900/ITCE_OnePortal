@@ -11,5 +11,4 @@ public interface ISqlDataAccess
     Task<List<TResult>> LoadData<TFirst, TSecond, TThird, TFourth, TFifth, TResult, U>(string sql, U parameters, Func<TFirst, TSecond, TThird, TFourth, TFifth, TResult> map, string splitOn);
     Task<List<TResult>> LoadData<TFirst, TSecond, TThird, TFourth, TFifth, TSixth, TResult, U>(string sql, U parameters, Func<TFirst, TSecond, TThird, TFourth, TFifth, TSixth, TResult> map, string splitOn);
     Task SaveData<T>(string sql, T parameters);
-    Task<List<TResult>> LoadData<TFirst, TSecond, TThird, TResult>(string sql, dynamic parameters, Func<TFirst, TSecond, TThird, TResult> map, string splitOn);
 }
