@@ -29,7 +29,7 @@
                 <p>📧@_change.Caller.Email</p>
             </div>
             <div class="details">
-            <p style="font-size: 20px; font-weight: bold;">@_change.BriefDescription</p>
+            <input type="text" value="@_change.BriefDescription" class="@inputClassBriefDesc" @onchange="OnInputChangedBriefDescription" />
 
             <select @bind="_change.SubCategory.CatID" @bind:event="oninput" @onchange="OnSelectionChangedCategories">
                 @foreach (var category in _categories)
@@ -117,6 +117,7 @@
     private string selectClassSubCat => _categoryChanged ? "red-select" : "";
     private bool _changeHasChanged = false;
     private string implementedTimeClass = "";
+    private string inputClassBriefDesc = "brief-description";
     protected override async Task OnInitializedAsync()
     {
         _change = await _dbChanges.GetChange(ChanIDInt);
@@ -162,6 +163,22 @@
             _changeHasChanged = true;
         }
     }
+
+    private void OnInputChangedBriefDescription(ChangeEventArgs e)
+    {
+        string temp = e.Value.ToString();
+        if (temp.Length >= 150 || string.IsNullOrWhiteSpace(temp))
+        {
+            inputClassBriefDesc = "brief-description-error";
+            _changeHasChanged = false;
+        }
+        else
+        {
+            inputClassBriefDesc = "brief-description";
+            _changeHasChanged = true;
+            _change.BriefDescription = temp;
+        }
+    }
 }
 
 <style>
@@ -204,5 +221,16 @@
     .error {
         border-color: red;
         background-color: red;
+    }
+
+    .brief-description {
+        font-size: 20px;
+        font-weight: bold;
+    }
+    .brief-description-error {
+        border-color: red;
+        background-color: red;
+        font-size: 20px;
+        font-weight: bold;
     }
 </style>
