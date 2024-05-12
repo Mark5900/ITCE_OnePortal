@@ -5,6 +5,7 @@
 @inject ICM_SubCategories _dbSubCategories
 @inject ICM_Categories _dbCategories
 @inject ICM_Operators _dbOperators
+@inject ICM_Callers _dbCallers
 @inject ILogger<ChangeById> _logger
 
 <form class="form-container d-flex justify-content-between align-items-center">
@@ -27,13 +28,16 @@
                 <p>📱@_change.Caller.ADTelephoneNumber</p>
                 <p>📱@_change.Caller.AlternativNumber1</p>
                 <p>📱@_change.Caller.AlternativNumber2</p>
-                <p>📧@_change.Caller.Email</p>
+
+                📧
+                <input type="email" @bind="_change.Caller.Email" @bind:event="oninput" @onchange="OnInputChangedCallerEmail"/>
             </div>
             <div class="details">
-            <input type="text" value="@_change.BriefDescription" class="@inputClassBriefDesc" @onchange="OnInputChangedBriefDescription" />
+                <input type="text" value="@_change.BriefDescription" class="@inputClassBriefDesc"
+                    @onchange="OnInputChangedBriefDescription" />
 
-            <select @bind="_change.SubCategory.CatID" @bind:event="oninput" @onchange="OnSelectionChangedCategories">
-                @foreach (var category in _categories)
+                <select @bind="_change.SubCategory.CatID" @bind:event="oninput" @onchange="OnSelectionChangedCategories">
+                    @foreach (var category in _categories)
                     {
                         <option value="@category.CatID">@category.Category</option>
                     }
@@ -55,35 +59,44 @@
             </div>
 
             <div class="planning">
-                <input type="datetime-local" @bind="_change.StartTime" @bind:event="oninput" id="startTime"  @onblur="CheckTime"/>
+                <label for="startTime" >Start time</label>
+                <input type="datetime-local" @bind="_change.StartTime" @bind:event="oninput" id="startTime"
+                    @onblur="CheckTime" />
 
+                <br />
+                <label for="implementedTime">Implemented time</label>
                 <input type="datetime-local" @bind="_change.ImplementedTime" @bind:event="oninput" id="implementedTime"
-                    @onblur="CheckTime" class="@implementedTimeClass"/>
+                    @onblur="CheckTime" class="@implementedTimeClass" />
             </div>
 
             <div class="processing">
-                <select @bind="_change.Operator.OpID" @bind:event="oninput">
-                    @foreach (var op in _operators)
+            <label for="operator">Operator</label>
+            <select id="operator" @bind="_change.Operator.OpID" @bind:event="oninput">
+                @foreach (var op in _operators)
                     {
                         <option value="@op.OpID">@op.UPN</option>
                     }
                 </select>
 
-            
-            <select @bind="@_change.Status" @bind:event="oninput" @onchange="OnSelectionChangedStatus">
-                <option value="Ikke godkendt">Ikke godkendt</option>
-                <option value="Godkendt">Godkendt</option>
-                @if (_change.NeedApproval == false || _change.ApprovedByApprover)
-                {
-                    <option value="Ikke påbegyndt">Ikke påbegyndt</option>
-                    <option value="Påbegyndt">Påbegyndt</option>
-                    <option value="Afventer">Afventer</option>
-                    <option value="Afsluttet">Afsluttet</option>
-                }
-            </select>
+                <br />
+                <label for="status">Status</label>
+                <select id="status" @bind="@_change.Status" @bind:event="oninput" @onchange="OnSelectionChangedStatus">
+                    <option value="Ikke godkendt">Ikke godkendt</option>
+                    <option value="Godkendt">Godkendt</option>
+                    @if (_change.NeedApproval == false || _change.ApprovedByApprover)
+                    {
+                        <option value="Ikke påbegyndt">Ikke påbegyndt</option>
+                        <option value="Påbegyndt">Påbegyndt</option>
+                        <option value="Afventer">Afventer</option>
+                        <option value="Afsluttet">Afsluttet</option>
+                    }
+                </select>
 
-            <p>@_change.ApprovedByApprover</p>
-            <p>@_change.NeedApproval</p>
+                <br />
+                <input type="checkbox" @bind="_change.NeedApproval" disabled /> Need approval
+                <br />
+                <input type="checkbox" @bind="_change.ApprovedByApprover" disabled /> Approved by approver
+
 
             </div>
 
@@ -120,9 +133,6 @@
                     }
                 </tbody>
             </table>
-
-            <p>Category: @_change.SubCategory.Category</p>
-            <p>SubCategory: @_change.SubCategory.Name</p>
         }
     </div>
 </div>
@@ -173,7 +183,7 @@
         _logger.LogInformation($"Change with ID {_change.ChanID} was updated");
     }
 
-        private void CheckTime()
+    private void CheckTime()
     {
         if (_change.ImplementedTime < _change.StartTime)
         {
@@ -207,11 +217,17 @@
     {
         if (e.Value.ToString() == "Godkendt")
         {
-            _change.ApprovedByApprover= true;
+            _change.ApprovedByApprover = true;
         }
 
         _change.Status = e.Value.ToString();
         _changeHasChanged = true;
+    }
+
+    private void OnInputChangedCallerEmail(ChangeEventArgs e)
+    {
+        string email = e.Value.ToString();
+        //TODO validate email
     }
 }
 
@@ -261,10 +277,17 @@
         font-size: 20px;
         font-weight: bold;
     }
+
     .brief-description-error {
         border-color: red;
         background-color: red;
         font-size: 20px;
         font-weight: bold;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 1px;
+        margin-top: 10px;
     }
 </style>

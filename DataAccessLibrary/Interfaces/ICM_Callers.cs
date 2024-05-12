@@ -4,4 +4,5 @@ public interface ICM_Callers
 {
     Task<List<CallerModel>> GetCallers();
     Task InsertCaller(CallerModel caller);
+    Task<CallerModel> GetCallerByEmailAddress(string email);
 }

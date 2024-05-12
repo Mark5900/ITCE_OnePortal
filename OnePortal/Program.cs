@@ -32,7 +32,9 @@ builder.Services.AddTransient<ICM_Comments, CM_Comments>();
 builder.Services.AddTransient<ICM_Changes, CM_Changes>();
 builder.Services.AddTransient<ICM_Categories, CM_Categories>();
 builder.Services.AddTransient<ICM_SubCategories, CM_SubCategories>();
+builder.Services.AddTransient<ICM_Callers, CM_Callers>();
 builder.Services.AddTransient<ICM_Operators, CM_Operators>();
+
 
 var app = builder.Build();
 

@@ -25,4 +25,12 @@ public class CM_Callers : ICM_Callers
 
         return _db.SaveData(query, caller);
     }
+
+    public Task<CallerModel> GetCallerByEmailAddress(string email)
+    {
+        const string query = "SELECT * FROM dbo.CM_Callers WHERE Email = @Email";
+
+        return _db.LoadData<CallerModel, dynamic>(query, new { Email = email })
+            .ContinueWith(x => x.Result.FirstOrDefault());
+    }
 }
