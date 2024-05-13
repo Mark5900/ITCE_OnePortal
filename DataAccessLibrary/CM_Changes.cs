@@ -38,26 +38,75 @@ public class CM_Changes : ICM_Changes
     public async Task<ChangeModel> GetChange(int ChanID)
     {
         string query = @"
-            SELECT cha.*, ca.*, sub.*, op.*
+            SELECT cha.*, ca.*, sub.*, op.*, ca_op.*
             FROM dbo.CM_Changes cha
             INNER JOIN dbo.CM_Callers ca ON cha.CallID = ca.CallID
             INNER JOIN dbo.CM_SubCategories sub ON cha.SubCatID = sub.SubCatID
             INNER JOIN dbo.CM_Categories cat ON sub.CatID = cat.CatID
             INNER JOIN dbo.CM_Operators op ON cha.OpID = op.OpID
-            WHERE cha.ChanID = " + ChanID;
+            INNER JOIN dbo.CM_Callers ca_op ON op.CallID = ca_op.CallID
+            WHERE cha.ChanID = @ChanID";
 
-        var change = await _db.LoadData<ChangeModel, CallerModel, SubCategoryModel, OperatorModel, ChangeModel, dynamic>(query, new { },
-            (cha, ca, sub, op) =>
+        var change = await _db.LoadData<ChangeModel, CallerModel, SubCategoryModel, OperatorModel, CallerModel, ChangeModel, dynamic>(query, new { ChanID },
+            (cha, ca, sub, op, ca_op) =>
             {
                 cha.Caller = ca;
                 cha.SubCategory = sub;
+                op.CallId = ca_op.CallId;
+                op.SkolePrefix = ca_op.SkolePrefix;
+                op.ADTelephoneNumber = ca_op.ADTelephoneNumber;
+                op.AlternativNumber1 = ca_op.AlternativNumber1;
+                op.AlternativNumber2 = ca_op.AlternativNumber2;
+                op.Email = ca_op.Email;
+                op.UPN = ca_op.UPN;
                 cha.Operator = op;
                 return cha;
-            }, splitOn: "CallID,SubCatID,OpID");
+            }, splitOn: "CallID,SubCatID,OpID,CallID");
 
         List<CommentModel> comments = await new CM_Comments(_db).GetComments(ChanID);
         change.FirstOrDefault().Comments = comments;
 
         return change.FirstOrDefault();
+    }
+
+    public async Task UpdateChange(ChangeModel change)
+    {
+        string query = @"
+        UPDATE dbo.CM_Changes
+        SET CallID = @CallID, 
+        BriefDescription = @BriefDescription,
+        SubCatID = @SubCatID,
+        Description = @Description,
+        StartTime = @StartTime,
+        ImplementedTime = @ImplementedTime,
+        Status = @Status,
+        ApprovedByApprover = @ApprovedByApprover,
+        OpID = @OpID,
+        IsTemplate = @IsTemplate,
+        NeedApproval = @NeedApproval
+        WHERE ChanID = @ChanID";
+
+        var parameters = new
+        {
+            CallID = change.Caller.CallId,
+            BriefDescription = change.BriefDescription,
+            SubCatID = change.SubCategory.SubCatID,
+            Description = change.Description,
+            StartTime = change.StartTime,
+            ImplementedTime = change.ImplementedTime,
+            Status = change.Status,
+            ApprovedByApprover = change.ApprovedByApprover,
+            OpID = change.Operator.OpID,
+            IsTemplate = change.IsTemplate,
+            NeedApproval = change.NeedApproval,
+            ChanID = change.ChanID
+        };
+
+        await _db.SaveData(query, parameters);
+
+        foreach (var comment in change.Comments)
+        {
+            await new CM_Comments(_db).UpdateComment(comment);
+        }
     }
 }

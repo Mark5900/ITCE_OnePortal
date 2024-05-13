@@ -1,0 +1,293 @@
+﻿@page "/Changes/{ChanID}"
+@using DataAccessLibrary
+@rendermode InteractiveServer
+@inject ICM_Changes _dbChanges
+@inject ICM_SubCategories _dbSubCategories
+@inject ICM_Categories _dbCategories
+@inject ICM_Operators _dbOperators
+@inject ICM_Callers _dbCallers
+@inject ILogger<ChangeById> _logger
+
+<form class="form-container d-flex justify-content-between align-items-center">
+    <h1>Change ID: @ChanID</h1>
+    <button class="btn btn-primary" disabled="@(!_changeHasChanged)" @onclick="ButtonSaveClicked">Save</button>
+</form>
+
+<div class="content-container">
+    <div class="left-side">
+        @if (_change is null)
+        {
+            <p><em>Loading...</em></p>
+        }
+        else
+        {
+
+            <div class="caller">
+                <p style="font-size: 20px; font-weight: bold;">@_change.Caller.UPN</p>
+                <p>@_change.Caller.SkolePrefix</p>
+                <p>📱@_change.Caller.ADTelephoneNumber</p>
+                <p>📱@_change.Caller.AlternativNumber1</p>
+                <p>📱@_change.Caller.AlternativNumber2</p>
+
+                📧
+                <input type="email" @bind="_change.Caller.Email" @bind:event="oninput" @onchange="OnInputChangedCallerEmail"/>
+            </div>
+            <div class="details">
+                <input type="text" value="@_change.BriefDescription" class="@inputClassBriefDesc"
+                    @onchange="OnInputChangedBriefDescription" />
+
+                <select @bind="_change.SubCategory.CatID" @bind:event="oninput" @onchange="OnSelectionChangedCategories">
+                    @foreach (var category in _categories)
+                    {
+                        <option value="@category.CatID">@category.Category</option>
+                    }
+                </select>
+
+                <select class="@selectClassSubCat" @bind="_change.SubCategory.SubCatID" @bind:event="oninput"
+                    @onchange="OnSelectionChangedSubCategories">
+                    @if (_categoryChanged)
+                    {
+                        <option selected disabled>Vælg en underkategori</option>
+                    }
+                    @foreach (var subCategory in _subCategories)
+                    {
+                        <option value="@subCategory.SubCatID"
+                            selected="@(_categoryChanged ? null : (_change.SubCategory.SubCatID == subCategory.SubCatID ? "selected" : null))">
+                            @subCategory.Name</option>
+                    }
+                </select>
+            </div>
+
+            <div class="planning">
+                <label for="startTime" >Start time</label>
+                <input type="datetime-local" @bind="_change.StartTime" @bind:event="oninput" id="startTime"
+                    @onblur="CheckTime" />
+
+                <br />
+                <label for="implementedTime">Implemented time</label>
+                <input type="datetime-local" @bind="_change.ImplementedTime" @bind:event="oninput" id="implementedTime"
+                    @onblur="CheckTime" class="@implementedTimeClass" />
+            </div>
+
+            <div class="processing">
+            <label for="operator">Operator</label>
+            <select id="operator" @bind="_change.Operator.OpID" @bind:event="oninput">
+                @foreach (var op in _operators)
+                    {
+                        <option value="@op.OpID">@op.UPN</option>
+                    }
+                </select>
+
+                <br />
+                <label for="status">Status</label>
+                <select id="status" @bind="@_change.Status" @bind:event="oninput" @onchange="OnSelectionChangedStatus">
+                    <option value="Ikke godkendt">Ikke godkendt</option>
+                    <option value="Godkendt">Godkendt</option>
+                    @if (_change.NeedApproval == false || _change.ApprovedByApprover)
+                    {
+                        <option value="Ikke påbegyndt">Ikke påbegyndt</option>
+                        <option value="Påbegyndt">Påbegyndt</option>
+                        <option value="Afventer">Afventer</option>
+                        <option value="Afsluttet">Afsluttet</option>
+                    }
+                </select>
+
+                <br />
+                <input type="checkbox" @bind="_change.NeedApproval" disabled /> Need approval
+                <br />
+                <input type="checkbox" @bind="_change.ApprovedByApprover" disabled /> Approved by approver
+
+
+            </div>
+
+        }
+    </div>
+
+    <div class="right-side">
+        @if (_change is null)
+        {
+            <p><em>Loading...</em></p>
+        }
+        else
+        {
+            <div class="description">
+                <p>@_change.Description</p>
+            </div>
+
+            <table class="table">
+            <thead>
+                <tr>
+                    <th>ComID</th>
+                    <th>Comment</th>
+                    <th>OpID</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var comment in _change.Comments)
+                    {
+                        <tr>
+                            <td>@comment.ComID</td>
+                            <td>@comment.Comment</td>
+                            <td>@comment.Operator.OpID</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string ChanID { get; set; }
+    public int ChanIDInt => int.TryParse(ChanID, out var chanId) ? chanId : -1;
+    private ChangeModel _change;
+    private List<CategoryModel> _categories;
+    private List<SubCategoryModel> _subCategories;
+    private List<OperatorModel> _operators;
+    private bool _categoryChanged = false;
+    private string selectClassSubCat => _categoryChanged ? "red-select" : "";
+    private bool _changeHasChanged = false;
+    private string implementedTimeClass = "";
+    private string inputClassBriefDesc = "brief-description";
+    protected override async Task OnInitializedAsync()
+    {
+        _change = await _dbChanges.GetChange(ChanIDInt);
+        _categories = await _dbCategories.GetCategories();
+        _subCategories = await _dbSubCategories.GetSubCategoriesByCategory(_change.SubCategory.CatID);
+        _operators = await _dbOperators.GetOperators();
+    }
+    void OnSelectionChangedSubCategories(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value.ToString(), out var selectedOption))
+        {
+            _change.SubCategory = _subCategories.FirstOrDefault(x => x.SubCatID == selectedOption);
+            _categoryChanged = false;
+            _changeHasChanged = true;
+        }
+    }
+
+    async Task OnSelectionChangedCategories(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value.ToString(), out var selectedOption))
+        {
+            _subCategories = await _dbSubCategories.GetSubCategoriesByCategory(selectedOption);
+            _categoryChanged = true;
+        }
+    }
+
+    private async void ButtonSaveClicked()
+    {
+        await _dbChanges.UpdateChange(_change);
+        _changeHasChanged = false;
+        _logger.LogInformation($"Change with ID {_change.ChanID} was updated");
+    }
+
+    private void CheckTime()
+    {
+        if (_change.ImplementedTime < _change.StartTime)
+        {
+            implementedTimeClass = "error";
+            _changeHasChanged = false;
+        }
+        else
+        {
+            implementedTimeClass = "";
+            _changeHasChanged = true;
+        }
+    }
+
+    private void OnInputChangedBriefDescription(ChangeEventArgs e)
+    {
+        string temp = e.Value.ToString();
+        if (temp.Length >= 150 || string.IsNullOrWhiteSpace(temp))
+        {
+            inputClassBriefDesc = "brief-description-error";
+            _changeHasChanged = false;
+        }
+        else
+        {
+            inputClassBriefDesc = "brief-description";
+            _changeHasChanged = true;
+            _change.BriefDescription = temp;
+        }
+    }
+
+    private void OnSelectionChangedStatus(ChangeEventArgs e)
+    {
+        if (e.Value.ToString() == "Godkendt")
+        {
+            _change.ApprovedByApprover = true;
+        }
+
+        _change.Status = e.Value.ToString();
+        _changeHasChanged = true;
+    }
+
+    private void OnInputChangedCallerEmail(ChangeEventArgs e)
+    {
+        string email = e.Value.ToString();
+        //TODO validate email
+    }
+}
+
+<style>
+    .content-container {
+        display: flex;
+        flex-direction: row;
+    }
+
+    .left-side {
+        flex: 1;
+    }
+
+    .right-side {
+        flex: 2;
+    }
+
+    .red-select {
+        background-color: red;
+    }
+
+    .caller {
+        border-bottom: 1px solid lightgray;
+        padding: 10px;
+    }
+
+    .details {
+        border-bottom: 1px solid lightgray;
+        padding: 10px;
+    }
+
+    .planning {
+        border-bottom: 1px solid lightgray;
+        padding: 10px;
+    }
+
+    .processing {
+        padding: 10px;
+    }
+
+    .error {
+        border-color: red;
+        background-color: red;
+    }
+
+    .brief-description {
+        font-size: 20px;
+        font-weight: bold;
+    }
+
+    .brief-description-error {
+        border-color: red;
+        background-color: red;
+        font-size: 20px;
+        font-weight: bold;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 1px;
+        margin-top: 10px;
+    }
+</style>
