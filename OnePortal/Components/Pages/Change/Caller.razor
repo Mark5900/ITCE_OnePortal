@@ -1,0 +1,113 @@
+﻿@using DataAccessLibrary
+@using System.ComponentModel.DataAnnotations
+@inject ICM_Callers _dbCallers
+@inject ISkoleData _dbSkoleData
+
+<input type="email" @bind="CallerPerson.UPN" @bind:event="oninput" @onchange="OnInputChangedCallerUPN"
+    style="font-size: 20px; font-weight: bold;" />
+<br />
+
+@if (CallerPerson.CallId == null)
+{
+    <select @bind="CallerPerson.SkolePrefix" @bind:event="oninput">
+        @if (_skoleData == null)
+        {
+            <option>Loading...</option>
+        }
+        else
+        {
+            @foreach (var skole in _skoleData)
+            {
+                <option value="@skole.SkolePrefix">@skole.SkolePrefix</option>
+            }
+        }
+
+    </select>
+    <br />
+}
+else
+{
+    <p>@CallerPerson.SkolePrefix</p>
+}
+
+<p>📱AD: @CallerPerson.ADTelephoneNumber</p>
+
+📱
+<input type="tel" @bind="CallerPerson.AlternativNumber1" @bind:event="oninput"
+    @onchange="OnInputChangedCallerAlTele1" />
+<br />
+
+📱
+<input type="tel" @bind="CallerPerson.AlternativNumber2" @bind:event="oninput"
+    @onchange="OnInputChangedCallerAlTele2" />
+<br />
+
+📧
+<input type="email" @bind="CallerPerson.Email" @bind:event="oninput" @onchange="OnInputChangedCallerEmail" />
+
+@code {
+    [Parameter]
+    [Required]
+    public CallerModel CallerPerson { get; set; }
+    [Parameter]
+    public EventCallback<CallerModel> OnCallerChanged { get; set; }
+    private List<SkoleDataModel> _skoleData;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _skoleData = await _dbSkoleData.GetSkoleData();
+    }
+
+    private async void OnInputChangedCallerEmail(ChangeEventArgs e)
+    {
+        string email = e.Value.ToString();
+        CallerModel newCaller = await _dbCallers.GetCallerByEmailAddress(email);
+        if (newCaller == null)
+        {
+            CallerPerson = new CallerModel();
+            CallerPerson.Email = email;
+        }
+        else
+        {
+            CallerPerson = newCaller;
+        }
+
+        await OnCallerChanged.InvokeAsync(CallerPerson);
+    }
+    private async void OnInputChangedCallerAlTele1(ChangeEventArgs e)
+    {
+        string alTele1 = e.Value.ToString();
+        CallerPerson.AlternativNumber1 = alTele1;
+        await OnCallerChanged.InvokeAsync(CallerPerson);
+    }
+    private async void OnInputChangedCallerAlTele2(ChangeEventArgs e)
+    {
+        string alTele2 = e.Value.ToString();
+        CallerPerson.AlternativNumber2 = alTele2;
+        await OnCallerChanged.InvokeAsync(CallerPerson);
+    }
+
+    private async void OnInputChangedCallerUPN(ChangeEventArgs e)
+    {
+        string upn = e.Value.ToString();
+        CallerModel newCaller = await _dbCallers.GetCallerByUPN(upn);
+        if (newCaller == null)
+        {
+            CallerPerson = new CallerModel();
+            CallerPerson.UPN = upn;
+        }
+        else
+        {
+            CallerPerson = newCaller;
+        }
+
+        await OnCallerChanged.InvokeAsync(CallerPerson);
+    }
+}
+<style>
+    label {
+        display: block;
+        margin-bottom: 1px;
+        margin-top: 10px;
+    }
+</style>

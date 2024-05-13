@@ -33,4 +33,11 @@ public class CM_Callers : ICM_Callers
         return _db.LoadData<CallerModel, dynamic>(query, new { Email = email })
             .ContinueWith(x => x.Result.FirstOrDefault());
     }
+    public Task<CallerModel> GetCallerByUPN(string upn)
+    {
+        const string query = "SELECT * FROM dbo.CM_Callers WHERE UPN = @UPN";
+
+        return _db.LoadData<CallerModel, dynamic>(query, new { UPN = upn })
+            .ContinueWith(x => x.Result.FirstOrDefault());
+    }
 }

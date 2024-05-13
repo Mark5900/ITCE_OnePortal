@@ -5,7 +5,6 @@
 @inject ICM_SubCategories _dbSubCategories
 @inject ICM_Categories _dbCategories
 @inject ICM_Operators _dbOperators
-@inject ICM_Callers _dbCallers
 @inject ILogger<ChangeById> _logger
 
 <form class="form-container d-flex justify-content-between align-items-center">
@@ -21,16 +20,8 @@
         }
         else
         {
-
             <div class="caller">
-                <p style="font-size: 20px; font-weight: bold;">@_change.Caller.UPN</p>
-                <p>@_change.Caller.SkolePrefix</p>
-                <p>📱@_change.Caller.ADTelephoneNumber</p>
-                <p>📱@_change.Caller.AlternativNumber1</p>
-                <p>📱@_change.Caller.AlternativNumber2</p>
-
-                📧
-                <input type="email" @bind="_change.Caller.Email" @bind:event="oninput" @onchange="OnInputChangedCallerEmail"/>
+                <OnePortal.Components.Pages.Change.Caller CallerPerson="@_change.Caller"  OnCallerChanged="OnCallerChanged" />
             </div>
             <div class="details">
                 <input type="text" value="@_change.BriefDescription" class="@inputClassBriefDesc"
@@ -59,14 +50,8 @@
             </div>
 
             <div class="planning">
-                <label for="startTime" >Start time</label>
-                <input type="datetime-local" @bind="_change.StartTime" @bind:event="oninput" id="startTime"
-                    @onblur="CheckTime" />
-
-                <br />
-                <label for="implementedTime">Implemented time</label>
-                <input type="datetime-local" @bind="_change.ImplementedTime" @bind:event="oninput" id="implementedTime"
-                    @onblur="CheckTime" class="@implementedTimeClass" />
+                <OnePortal.Components.Pages.Change.StartImplementedTime StartTime="@_change.StartTime" 
+                ImplementedTime="@_change.ImplementedTime" OnTimesChanged="OnPlanningTimesChanged" />
             </div>
 
             <div class="processing">
@@ -133,7 +118,12 @@
                     }
                 </tbody>
             </table>
+
+            <p>CreatedTime: @_change.StartTime</p>
+            <p>StartTime: @_change.ImplementedTime</p>
         }
+
+        
     </div>
 </div>
 
@@ -148,7 +138,7 @@
     private bool _categoryChanged = false;
     private string selectClassSubCat => _categoryChanged ? "red-select" : "";
     private bool _changeHasChanged = false;
-    private string implementedTimeClass = "";
+
     private string inputClassBriefDesc = "brief-description";
     protected override async Task OnInitializedAsync()
     {
@@ -183,19 +173,7 @@
         _logger.LogInformation($"Change with ID {_change.ChanID} was updated");
     }
 
-    private void CheckTime()
-    {
-        if (_change.ImplementedTime < _change.StartTime)
-        {
-            implementedTimeClass = "error";
-            _changeHasChanged = false;
-        }
-        else
-        {
-            implementedTimeClass = "";
-            _changeHasChanged = true;
-        }
-    }
+
 
     private void OnInputChangedBriefDescription(ChangeEventArgs e)
     {
@@ -223,11 +201,16 @@
         _change.Status = e.Value.ToString();
         _changeHasChanged = true;
     }
-
-    private void OnInputChangedCallerEmail(ChangeEventArgs e)
+    private void OnPlanningTimesChanged((DateTime StartTime, DateTime ImplementedTime) times)
     {
-        string email = e.Value.ToString();
-        //TODO validate email
+        _change.StartTime = times.StartTime;
+        _change.ImplementedTime = times.ImplementedTime;
+        _changeHasChanged = true;
+    }
+    private void OnCallerChanged(CallerModel caller)
+    {
+        _change.Caller = caller;
+        _changeHasChanged = true;
     }
 }
 
