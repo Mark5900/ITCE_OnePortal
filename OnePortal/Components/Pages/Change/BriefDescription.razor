@@ -1,0 +1,38 @@
+﻿<input type="text" value="@Text" class="@inputClassBriefDesc"
+                    @onchange="OnInputChangedBriefDescription" />
+
+@code {
+    [Parameter]
+    public string Text { get; set; }
+    [Parameter]
+    public EventCallback<string> OnBriefDescriptionChanged { get; set; }
+    private string inputClassBriefDesc = "brief-description";
+
+    private async void OnInputChangedBriefDescription(ChangeEventArgs e)
+    {
+        string temp = e.Value.ToString();
+        if (temp.Length >= 150 || string.IsNullOrWhiteSpace(temp))
+        {
+            inputClassBriefDesc = "brief-description-error";
+        }
+        else
+        {
+            inputClassBriefDesc = "brief-description";
+            OnBriefDescriptionChanged.InvokeAsync(temp);
+        }
+    }
+}
+
+<style>
+    .brief-description {
+        font-size: 20px;
+        font-weight: bold;
+    }
+
+    .brief-description-error {
+        border-color: red;
+        background-color: red;
+        font-size: 20px;
+        font-weight: bold;
+    }
+</style>

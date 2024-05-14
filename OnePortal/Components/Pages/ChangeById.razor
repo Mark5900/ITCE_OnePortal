@@ -22,8 +22,7 @@
                 <Caller CallerPerson="@_change.Caller" OnCallerChanged="OnCallerChanged" />
             </div>
             <div class="details">
-                <input type="text" value="@_change.BriefDescription" class="@inputClassBriefDesc"
-                    @onchange="OnInputChangedBriefDescription" />
+                <BriefDescription Text="@_change.BriefDescription" OnBriefDescriptionChanged="OnBriefDescriptionChanged" />
 
                 <Categories SubCategory="@_change.SubCategory" OnCategoryChanged="OnCategoryChanged" />
             </div>
@@ -88,12 +87,9 @@
     public int ChanIDInt => int.TryParse(ChanID, out var chanId) ? chanId : -1;
     private ChangeModel _change;
     private bool _changeHasChanged = false;
-
-    private string inputClassBriefDesc = "brief-description";
     protected override async Task OnInitializedAsync()
     {
         _change = await _dbChanges.GetChange(ChanIDInt);
-        
     }
 
     private async void ButtonSaveClicked()
@@ -103,21 +99,6 @@
         _logger.LogInformation($"Change with ID {_change.ChanID} was updated");
     }
 
-    private void OnInputChangedBriefDescription(ChangeEventArgs e)
-    {
-        string temp = e.Value.ToString();
-        if (temp.Length >= 150 || string.IsNullOrWhiteSpace(temp))
-        {
-            inputClassBriefDesc = "brief-description-error";
-            _changeHasChanged = false;
-        }
-        else
-        {
-            inputClassBriefDesc = "brief-description";
-            _changeHasChanged = true;
-            _change.BriefDescription = temp;
-        }
-    }
     private void OnPlanningTimesChanged((DateTime StartTime, DateTime ImplementedTime) times)
     {
         _change.StartTime = times.StartTime;
@@ -149,6 +130,11 @@
         _change.Status = status;
         _changeHasChanged = true;
     }
+    private void OnBriefDescriptionChanged(string briefDescription)
+    {
+        _change.BriefDescription = briefDescription;
+        _changeHasChanged = true;
+    }
 }
 
 <style>
@@ -163,10 +149,6 @@
 
     .right-side {
         flex: 2;
-    }
-
-    .red-select {
-        background-color: red;
     }
 
     .caller {
@@ -186,23 +168,6 @@
 
     .processing {
         padding: 10px;
-    }
-
-    .error {
-        border-color: red;
-        background-color: red;
-    }
-
-    .brief-description {
-        font-size: 20px;
-        font-weight: bold;
-    }
-
-    .brief-description-error {
-        border-color: red;
-        background-color: red;
-        font-size: 20px;
-        font-weight: bold;
     }
 
     label {
