@@ -37,27 +37,14 @@
                 <OperatorPicker OperatorObj="@_change.Operator" OnOperatorChanged="OnOperatorChanged" />
 
                 <br />
-                <label for="status">Status</label>
-                <select id="status" @bind="@_change.Status" @bind:event="oninput" @onchange="OnSelectionChangedStatus">
-                    <option value="Ikke godkendt">Ikke godkendt</option>
-                    <option value="Godkendt">Godkendt</option>
-                    @if (_change.NeedApproval == false || _change.ApprovedByApprover)
-                    {
-                        <option value="Ikke påbegyndt">Ikke påbegyndt</option>
-                        <option value="Påbegyndt">Påbegyndt</option>
-                        <option value="Afventer">Afventer</option>
-                        <option value="Afsluttet">Afsluttet</option>
-                    }
-                </select>
+                <Status CurrentStatus="@_change.Status" NeedApproval="@_change.NeedApproval"
+                    ApprovedByApprover="@_change.ApprovedByApprover" OnStatusChanged="OnStatusChanged" />
 
                 <br />
                 <input type="checkbox" @bind="_change.NeedApproval" disabled /> Need approval
                 <br />
                 <input type="checkbox" @bind="_change.ApprovedByApprover" disabled /> Approved by approver
-
-
             </div>
-
         }
     </div>
 
@@ -91,12 +78,7 @@
                     }
                 </tbody>
             </table>
-
-            <p>CreatedTime: @_change.StartTime</p>
-            <p>StartTime: @_change.ImplementedTime</p>
         }
-
-        
     </div>
 </div>
 
@@ -105,7 +87,6 @@
     public string ChanID { get; set; }
     public int ChanIDInt => int.TryParse(ChanID, out var chanId) ? chanId : -1;
     private ChangeModel _change;
-
     private bool _changeHasChanged = false;
 
     private string inputClassBriefDesc = "brief-description";
@@ -137,17 +118,6 @@
             _change.BriefDescription = temp;
         }
     }
-
-    private void OnSelectionChangedStatus(ChangeEventArgs e)
-    {
-        if (e.Value.ToString() == "Godkendt")
-        {
-            _change.ApprovedByApprover = true;
-        }
-
-        _change.Status = e.Value.ToString();
-        _changeHasChanged = true;
-    }
     private void OnPlanningTimesChanged((DateTime StartTime, DateTime ImplementedTime) times)
     {
         _change.StartTime = times.StartTime;
@@ -167,6 +137,16 @@
     private void OnOperatorChanged(OperatorModel operatorObj)
     {
         _change.Operator = operatorObj;
+        _changeHasChanged = true;
+    }
+    private void OnStatusChanged(string status)
+    {
+        if (status == "Godkendt")
+        {
+            _change.ApprovedByApprover = true;
+        }
+
+        _change.Status = status;
         _changeHasChanged = true;
     }
 }
