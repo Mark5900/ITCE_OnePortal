@@ -1,9 +1,8 @@
 ﻿@page "/Changes/{ChanID}"
 @using DataAccessLibrary
+@using OnePortal.Components.Pages.Change
 @rendermode InteractiveServer
 @inject ICM_Changes _dbChanges
-@inject ICM_SubCategories _dbSubCategories
-@inject ICM_Categories _dbCategories
 @inject ICM_Operators _dbOperators
 @inject ILogger<ChangeById> _logger
 
@@ -21,36 +20,17 @@
         else
         {
             <div class="caller">
-                <OnePortal.Components.Pages.Change.Caller CallerPerson="@_change.Caller"  OnCallerChanged="OnCallerChanged" />
+                <Caller CallerPerson="@_change.Caller" OnCallerChanged="OnCallerChanged" />
             </div>
             <div class="details">
                 <input type="text" value="@_change.BriefDescription" class="@inputClassBriefDesc"
                     @onchange="OnInputChangedBriefDescription" />
 
-                <select @bind="_change.SubCategory.CatID" @bind:event="oninput" @onchange="OnSelectionChangedCategories">
-                    @foreach (var category in _categories)
-                    {
-                        <option value="@category.CatID">@category.Category</option>
-                    }
-                </select>
-
-                <select class="@selectClassSubCat" @bind="_change.SubCategory.SubCatID" @bind:event="oninput"
-                    @onchange="OnSelectionChangedSubCategories">
-                    @if (_categoryChanged)
-                    {
-                        <option selected disabled>Vælg en underkategori</option>
-                    }
-                    @foreach (var subCategory in _subCategories)
-                    {
-                        <option value="@subCategory.SubCatID"
-                            selected="@(_categoryChanged ? null : (_change.SubCategory.SubCatID == subCategory.SubCatID ? "selected" : null))">
-                            @subCategory.Name</option>
-                    }
-                </select>
+                <Categories SubCategory="@_change.SubCategory" OnCategoryChanged="OnCategoryChanged" />
             </div>
 
             <div class="planning">
-                <OnePortal.Components.Pages.Change.StartImplementedTime StartTime="@_change.StartTime" 
+                <StartImplementedTime StartTime="@_change.StartTime" 
                 ImplementedTime="@_change.ImplementedTime" OnTimesChanged="OnPlanningTimesChanged" />
             </div>
 
@@ -132,38 +112,16 @@
     public string ChanID { get; set; }
     public int ChanIDInt => int.TryParse(ChanID, out var chanId) ? chanId : -1;
     private ChangeModel _change;
-    private List<CategoryModel> _categories;
-    private List<SubCategoryModel> _subCategories;
+
     private List<OperatorModel> _operators;
-    private bool _categoryChanged = false;
-    private string selectClassSubCat => _categoryChanged ? "red-select" : "";
+
     private bool _changeHasChanged = false;
 
     private string inputClassBriefDesc = "brief-description";
     protected override async Task OnInitializedAsync()
     {
         _change = await _dbChanges.GetChange(ChanIDInt);
-        _categories = await _dbCategories.GetCategories();
-        _subCategories = await _dbSubCategories.GetSubCategoriesByCategory(_change.SubCategory.CatID);
         _operators = await _dbOperators.GetOperators();
-    }
-    void OnSelectionChangedSubCategories(ChangeEventArgs e)
-    {
-        if (int.TryParse(e.Value.ToString(), out var selectedOption))
-        {
-            _change.SubCategory = _subCategories.FirstOrDefault(x => x.SubCatID == selectedOption);
-            _categoryChanged = false;
-            _changeHasChanged = true;
-        }
-    }
-
-    async Task OnSelectionChangedCategories(ChangeEventArgs e)
-    {
-        if (int.TryParse(e.Value.ToString(), out var selectedOption))
-        {
-            _subCategories = await _dbSubCategories.GetSubCategoriesByCategory(selectedOption);
-            _categoryChanged = true;
-        }
     }
 
     private async void ButtonSaveClicked()
@@ -172,8 +130,6 @@
         _changeHasChanged = false;
         _logger.LogInformation($"Change with ID {_change.ChanID} was updated");
     }
-
-
 
     private void OnInputChangedBriefDescription(ChangeEventArgs e)
     {
@@ -210,6 +166,11 @@
     private void OnCallerChanged(CallerModel caller)
     {
         _change.Caller = caller;
+        _changeHasChanged = true;
+    }
+    private void OnCategoryChanged(SubCategoryModel subCategory)
+    {
+        _change.SubCategory = subCategory;
         _changeHasChanged = true;
     }
 }

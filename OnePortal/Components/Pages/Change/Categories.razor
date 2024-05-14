@@ -1,0 +1,78 @@
+﻿@using DataAccessLibrary
+@inject ICM_SubCategories _dbSubCategories
+@inject ICM_Categories _dbCategories
+
+<select @bind="SubCategory.CatID" @bind:event="oninput" @onchange="OnSelectionChangedCategories">
+    @if (_categories == null)
+    {
+        <option>Loading...</option>
+    }
+    else
+    {
+        @foreach (var category in _categories)
+        {
+            <option value="@category.CatID">@category.Category</option>
+        }
+    }
+</select>
+
+<select class="@selectClassSubCat" @bind="SubCategory.SubCatID" @bind:event="oninput"
+    @onchange="OnSelectionChangedSubCategories">
+    @if (_subCategories == null)
+    {
+        <option>Loading...</option>
+    }
+    else
+    {
+        @if (_categoryChanged)
+        {
+            <option selected disabled>Vælg en underkategori</option>
+        }
+        @foreach (var subCategory in _subCategories)
+        {
+            <option value="@subCategory.SubCatID"
+                selected="@(_categoryChanged ? null : (SubCategory.SubCatID == subCategory.SubCatID ? "selected" : null))">
+                @subCategory.Name</option>
+        }
+    }
+</select>
+
+@code {
+    [Parameter]
+    public SubCategoryModel SubCategory { get; set; }
+    [Parameter]
+    public EventCallback<SubCategoryModel> OnCategoryChanged { get; set; }
+    private List<CategoryModel> _categories;
+    private List<SubCategoryModel> _subCategories;
+    private bool _categoryChanged = false;
+    private string selectClassSubCat => _categoryChanged ? "error" : "";
+    protected override async Task OnInitializedAsync()
+    {
+        _categories = await _dbCategories.GetCategories();
+        _subCategories = await _dbSubCategories.GetSubCategories();
+    }
+    private async void OnSelectionChangedSubCategories(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value.ToString(), out var selectedOption))
+        {
+            SubCategory = _subCategories.FirstOrDefault(x => x.SubCatID == selectedOption);
+            _categoryChanged = false;
+            await OnCategoryChanged.InvokeAsync(SubCategory);
+        }
+    }
+    private async Task OnSelectionChangedCategories(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value.ToString(), out var selectedOption))
+        {
+            _subCategories = await _dbSubCategories.GetSubCategoriesByCategory(selectedOption);
+            _categoryChanged = true;
+        }
+    }
+}
+
+<style>
+    .error {
+        border-color: red;
+        background-color: red;
+    }
+</style>
