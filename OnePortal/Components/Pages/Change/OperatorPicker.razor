@@ -1,0 +1,35 @@
+﻿@using DataAccessLibrary
+@inject ICM_Operators _dbOperators
+
+<label for="operator">Operator</label>
+<select id="operator" @bind="OperatorObj.OpID" @bind:event="oninput" @onchange="OnSelectOperatorChanged">
+    @if (_operators == null)
+    {
+        <option value="0">Loading...</option>
+    }
+    else
+    {
+        @foreach (var op in _operators)
+        {
+            <option value="@op.OpID">@op.UPN</option>
+        }
+   
+    }
+     </select>
+
+@code {
+    [Parameter]
+    public OperatorModel OperatorObj { get; set; }
+    [Parameter]
+    public EventCallback<OperatorModel> OnOperatorChanged { get; set; }
+    private List<OperatorModel> _operators;
+    protected override async Task OnInitializedAsync()
+    {
+        _operators = await _dbOperators.GetOperators();
+    }
+    private async Task OnSelectOperatorChanged(ChangeEventArgs e)
+    {
+        OperatorObj = _operators.FirstOrDefault(op => op.OpID == int.Parse(e.Value.ToString()));
+        await OnOperatorChanged.InvokeAsync(OperatorObj);
+    }
+}

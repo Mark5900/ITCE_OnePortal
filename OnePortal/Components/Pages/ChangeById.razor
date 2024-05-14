@@ -3,7 +3,6 @@
 @using OnePortal.Components.Pages.Change
 @rendermode InteractiveServer
 @inject ICM_Changes _dbChanges
-@inject ICM_Operators _dbOperators
 @inject ILogger<ChangeById> _logger
 
 <form class="form-container d-flex justify-content-between align-items-center">
@@ -35,13 +34,7 @@
             </div>
 
             <div class="processing">
-            <label for="operator">Operator</label>
-            <select id="operator" @bind="_change.Operator.OpID" @bind:event="oninput">
-                @foreach (var op in _operators)
-                    {
-                        <option value="@op.OpID">@op.UPN</option>
-                    }
-                </select>
+                <OperatorPicker OperatorObj="@_change.Operator" OnOperatorChanged="OnOperatorChanged" />
 
                 <br />
                 <label for="status">Status</label>
@@ -113,15 +106,13 @@
     public int ChanIDInt => int.TryParse(ChanID, out var chanId) ? chanId : -1;
     private ChangeModel _change;
 
-    private List<OperatorModel> _operators;
-
     private bool _changeHasChanged = false;
 
     private string inputClassBriefDesc = "brief-description";
     protected override async Task OnInitializedAsync()
     {
         _change = await _dbChanges.GetChange(ChanIDInt);
-        _operators = await _dbOperators.GetOperators();
+        
     }
 
     private async void ButtonSaveClicked()
@@ -171,6 +162,11 @@
     private void OnCategoryChanged(SubCategoryModel subCategory)
     {
         _change.SubCategory = subCategory;
+        _changeHasChanged = true;
+    }
+    private void OnOperatorChanged(OperatorModel operatorObj)
+    {
+        _change.Operator = operatorObj;
         _changeHasChanged = true;
     }
 }
