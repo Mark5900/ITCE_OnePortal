@@ -1,5 +1,30 @@
-﻿<h3>Description</h3>
+﻿@using Blazorise.RichTextEdit
+
+<RichTextEdit @ref="_richTextEdit" 
+        ContentChanged="@OnContentChanged">
+</RichTextEdit>
 
 @code {
+    [Parameter]
+    public string RichText { get; set; }
+    [Parameter]
+    public EventCallback<string> OnDescriptionChanged { get; set; }
+    private protected RichTextEdit _richTextEdit;
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await _richTextEdit.SetHtmlAsync(RichText);
+            firstRender = false;
+        }
+    }
+    private async void OnContentChanged(){
+        var html = await _richTextEdit.GetHtmlAsync();
+
+        if (html != RichText){
+            RichText = html;
+            await OnDescriptionChanged.InvokeAsync(html);
+        }
+    }
 }

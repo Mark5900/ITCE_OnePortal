@@ -4,6 +4,7 @@ using Serilog;
 using Blazorise;
 using Blazorise.Bootstrap;
 using Blazorise.Icons.FontAwesome;
+using Blazorise.RichTextEdit;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +25,7 @@ builder.Services
         options.Immediate = true;
     } )
     .AddBootstrapProviders()
+    .AddBlazoriseRichTextEdit()
     .AddFontAwesomeIcons();
 
 builder.Services.AddTransient<ISqlDataAccess, SqlDataAccess>();

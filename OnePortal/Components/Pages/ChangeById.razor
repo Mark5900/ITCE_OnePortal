@@ -55,7 +55,7 @@
         else
         {
             <div class="description">
-                <p>@_change.Description</p>
+                <Description RichText="@_change.Description" OnDescriptionChanged="OnDescriptionChanged" />
             </div>
 
             <table class="table">
@@ -133,6 +133,11 @@
     private void OnBriefDescriptionChanged(string briefDescription)
     {
         _change.BriefDescription = briefDescription;
+        _changeHasChanged = true;
+    }
+    private void OnDescriptionChanged(string description)
+    {
+        _change.Description = description;
         _changeHasChanged = true;
     }
 }
