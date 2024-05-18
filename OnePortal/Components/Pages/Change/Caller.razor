@@ -7,7 +7,7 @@
     style="font-size: 20px; font-weight: bold;" />
 <br />
 
-@if (CallerPerson.CallId == null)
+@if (CallerPerson.CallId == null || CallerPerson.CallId == 0)
 {
     <select @bind="CallerPerson.SkolePrefix" @bind:event="oninput">
         @if (_skoleData == null)
@@ -60,16 +60,22 @@ else
 
     private async void OnInputChangedCallerEmail(ChangeEventArgs e)
     {
-        string email = e.Value.ToString();
-        CallerModel newCaller = await _dbCallers.GetCallerByEmailAddress(email);
-        if (newCaller == null)
-        {
-            CallerPerson = new CallerModel();
+        string email = e.Value.ToString().ToLower();
+        if (CallerPerson.CallId != 0){
+                CallerModel newCaller = null;
+                newCaller = await _dbCallers.GetCallerByEmailAddress(email);
+            
+            if (newCaller == null)
+            {
+                CallerPerson = new CallerModel();
+                CallerPerson.Email = email;
+            }
+            else
+            {
+                CallerPerson = newCaller;
+            }
+        } else {
             CallerPerson.Email = email;
-        }
-        else
-        {
-            CallerPerson = newCaller;
         }
 
         await OnCallerChanged.InvokeAsync(CallerPerson);
@@ -89,16 +95,22 @@ else
 
     private async void OnInputChangedCallerUPN(ChangeEventArgs e)
     {
-        string upn = e.Value.ToString();
-        CallerModel newCaller = await _dbCallers.GetCallerByUPN(upn);
-        if (newCaller == null)
-        {
-            CallerPerson = new CallerModel();
+        string upn = e.Value.ToString().ToLower();
+        if (CallerPerson.CallId != 0) {
+            CallerModel newCaller = null;
+            newCaller = await _dbCallers.GetCallerByUPN(upn);
+
+            if (newCaller == null)
+            {
+                CallerPerson = new CallerModel();
+                CallerPerson.UPN = upn;
+            }
+            else
+            {
+                CallerPerson = newCaller;
+            }
+        } else {
             CallerPerson.UPN = upn;
-        }
-        else
-        {
-            CallerPerson = newCaller;
         }
 
         await OnCallerChanged.InvokeAsync(CallerPerson);

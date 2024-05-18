@@ -79,6 +79,7 @@
     private int ChanIDInt => int.TryParse(ChanID, out var chanId) ? chanId : -1;
     private ChangeModel _change;
     private bool _changeHasChanged = false;
+    private bool _addNewComment = false;
     private CommentModel _newComment = new CommentModel();
     protected override async Task OnInitializedAsync()
     {
@@ -87,9 +88,18 @@
 
     private async void ButtonSaveClicked()
     {
+        if (_addNewComment)
+        {
+            _change.Comments.Add(_newComment);
+            _addNewComment = false;
+        }
+
         await _dbChanges.UpdateChange(_change);
         _changeHasChanged = false;
         _logger.LogInformation($"Change with ID {_change.ChanID} was updated");
+
+        // Refresh page to get the updated data
+        _change = await _dbChanges.GetChange(ChanIDInt);
     }
 
     private void OnPlanningTimesChanged((DateTime StartTime, DateTime ImplementedTime) times)
@@ -135,8 +145,8 @@
     }
     private void OnCommentChanged(CommentModel comment)
     {
-        //TODO: Implement
-        _changeHasChanged = true;
+        _change.Comments = _change.Comments.Where(c => c.ComID != comment.ComID).ToList();
+        _change.Comments.Add(comment);
     }
     private void OnCommentAdded(CommentModel comment)
     {
@@ -148,6 +158,7 @@
 
         _newComment = comment;
         _changeHasChanged = true;
+        _addNewComment = true;
     }
 }
 

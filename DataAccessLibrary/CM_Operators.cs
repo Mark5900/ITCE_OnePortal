@@ -8,20 +8,20 @@ public class CM_Operators : ICM_Operators
     {
         _db = db;
     }
-    public Task<List<OperatorModel>> GetOperators()
+    public async Task<List<OperatorModel>> GetOperators()
     {
         const string query = @"
         SELECT o.OpID, o.ChangeApprover, c.*
         FROM [dbo].[CM_Operators] o
         INNER JOIN [dbo].[CM_Callers] c ON o.CallID = c.CallID";
 
-        return _db.LoadData<OperatorModel, dynamic>(query, new { });
+        return await _db.LoadData<OperatorModel, dynamic>(query, new { });
     }
-    public Task InsertOperator(OperatorModel operatorModel)
+    public async Task InsertOperator(OperatorModel operatorModel)
     {
         const string query = @"INSERT INTO dbo.CM_Operators (CallID, ChangeApprover)
                                 VALUES (@CallID, @ChangeApprover);";
 
-        return _db.SaveData(query, operatorModel);
+        await _db.SaveData(query, operatorModel);
     }
 }

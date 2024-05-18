@@ -8,17 +8,17 @@ public class CM_Categories : ICM_Categories
     {
         _db = db;
     }
-    public Task<List<CategoryModel>> GetCategories()
+    public async Task<List<CategoryModel>> GetCategories()
     {
         const string query = "SELECT * FROM dbo.CM_Categories";
 
-        return _db.LoadData<CategoryModel, dynamic>(query, new { });
+        return await _db.LoadData<CategoryModel, dynamic>(query, new { });
     }
-    public Task InsertCategory(CategoryModel category)
+    public async Task InsertCategory(CategoryModel category)
     {
         const string query = @"INSERT INTO dbo.CM_Categories (Category)
                                 VALUES (@Category);";
 
-        return _db.SaveData(query, category);
+        await _db.SaveData(query, category);
     }
 }

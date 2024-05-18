@@ -9,14 +9,14 @@ public class SkoleData : ISkoleData
         _db = db;
     }
 
-    public Task<List<SkoleDataModel>> GetSkoleData()
+    public async Task<List<SkoleDataModel>> GetSkoleData()
     {
         const string query = "SELECT * FROM dbo.SkoleData";
 
-        return _db.LoadData<SkoleDataModel, dynamic>(query, new { });
+        return await _db.LoadData<SkoleDataModel, dynamic>(query, new { });
     }
 
-    public Task InsertSkoleData(SkoleDataModel skoleData)
+    public async Task InsertSkoleData(SkoleDataModel skoleData)
     {
         const string query = @"
             INSERT INTO dbo.SkoleData (SkolePrefix, SkoleNavn, TeknikerGruppe, CVR, EAN)
@@ -24,6 +24,6 @@ public class SkoleData : ISkoleData
                     CASE WHEN @CVR IS NULL OR @CVR = '' THEN NULL ELSE CAST(@CVR AS NUMERIC) END, 
                     CASE WHEN @EAN IS NULL OR @EAN = '' THEN NULL ELSE CAST(@EAN AS NUMERIC) END);";
 
-        return _db.SaveData(query, skoleData);
+        _db.SaveData(query, skoleData);
     }
 }

@@ -64,6 +64,8 @@ public class CM_Changes : ICM_Changes
             }, splitOn: "CallID,SubCatID,OpID,CallID");
 
         List<CommentModel> comments = await new CM_Comments(_db).GetComments(ChanID);
+        comments = comments.OrderByDescending(c => c.ComID).ToList();
+
         change.FirstOrDefault().Comments = comments;
 
         return change.FirstOrDefault();
@@ -71,6 +73,36 @@ public class CM_Changes : ICM_Changes
 
     public async Task UpdateChange(ChangeModel change)
     {
+        #region Create Caller and update if needed
+        if (change.Caller.CallId == 0)
+        {
+            await new CM_Callers(_db).CreateCaller(change.Caller);
+
+            CallerModel caller;
+            if (!string.IsNullOrEmpty(change.Caller.UPN))
+            {
+                caller = await new CM_Callers(_db).GetCallerByUPN(change.Caller.UPN);
+            }
+            else
+            {
+                caller = await new CM_Callers(_db).GetCallerByEmailAddress(change.Caller.Email);
+            }
+
+            if (caller == null)
+            {
+                throw new Exception("Caller not found after creation");
+            }
+            else
+            {
+                change.Caller = caller;
+            }
+        }
+        else
+        {
+            await new CM_Callers(_db).UpdateCaller(change.Caller);
+        }
+        #endregion
+
         string query = @"
         UPDATE dbo.CM_Changes
         SET CallID = @CallID, 
@@ -106,7 +138,14 @@ public class CM_Changes : ICM_Changes
 
         foreach (var comment in change.Comments)
         {
-            await new CM_Comments(_db).UpdateComment(comment);
+            if (comment.ComID == 0)
+            {
+                await new CM_Comments(_db).CreateComment(comment, change.ChanID);
+            }
+            else
+            {
+                await new CM_Comments(_db).UpdateComment(comment);
+            }
         }
     }
 }
