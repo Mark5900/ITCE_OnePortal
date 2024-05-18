@@ -29,20 +29,11 @@
     }
 </form>
 
-@if (Object != null)
-{
-    @if (buttonClicked == false){
-        <div class="commentText">
-            @if (string.IsNullOrEmpty(Object.Comment) == false){
-                @((MarkupString)Object.Comment)
-            }
-        </div>
-    } else {
+
         <RichTextEdit @ref="_richTextEdit" 
-            ContentChanged="@OnContentChanged">
+            ContentChanged="@OnContentChanged"
+            ReadOnly="@readOnly">
         </RichTextEdit>
-    }
-}
 
 @code {
     [Parameter]
@@ -52,12 +43,23 @@
     public List<OperatorModel> Operators { get; set; }
     private RichTextEdit _richTextEdit;
     private bool buttonClicked = false;
+    private bool readOnly => buttonClicked == false;
 
     protected override async Task OnInitializedAsync(){
         Operators = await _dbOperators.GetOperators();
-        if (Object == null){
+
+        if (Object == null)
             Object = new CommentModel();
+
+        if (Object.ComID == 0)
             buttonClicked = true;
+            
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && _richTextEdit != null && !string.IsNullOrWhiteSpace(Object.Comment))
+        {
+            await _richTextEdit.SetHtmlAsync(Object.Comment);
         }
     }
     private async void OnContentChanged(){
@@ -75,8 +77,6 @@
      private async Task OnButtonClicked()
     {
         buttonClicked = true;
-        if (string.IsNullOrEmpty(Object.Comment) == false)
-            await _richTextEdit.SetHtmlAsync(Object.Comment);
         await InvokeAsync(StateHasChanged);
     }
 }

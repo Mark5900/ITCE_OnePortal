@@ -59,7 +59,7 @@
             </div>
 
             <div style="padding: 10px;">
-                <Comment OnCommentChanged="OnCommentAdded" />
+                <Comment Object="@_newComment" OnCommentChanged="OnCommentAdded" />
             </div>
             
 
@@ -76,9 +76,10 @@
 @code {
     [Parameter]
     public string ChanID { get; set; }
-    public int ChanIDInt => int.TryParse(ChanID, out var chanId) ? chanId : -1;
+    private int ChanIDInt => int.TryParse(ChanID, out var chanId) ? chanId : -1;
     private ChangeModel _change;
     private bool _changeHasChanged = false;
+    private CommentModel _newComment = new CommentModel();
     protected override async Task OnInitializedAsync()
     {
         _change = await _dbChanges.GetChange(ChanIDInt);
@@ -139,7 +140,13 @@
     }
     private void OnCommentAdded(CommentModel comment)
     {
-        _change.Comments.Add(comment);
+        if (string.IsNullOrWhiteSpace(comment.Comment))
+            return;
+
+        if (string.IsNullOrWhiteSpace(comment.Operator?.UPN))
+            return;
+
+        _newComment = comment;
         _changeHasChanged = true;
     }
 }
