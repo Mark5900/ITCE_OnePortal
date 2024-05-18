@@ -58,25 +58,17 @@
                 <Description RichText="@_change.Description" OnDescriptionChanged="OnDescriptionChanged" />
             </div>
 
-            <table class="table">
-            <thead>
-                <tr>
-                    <th>ComID</th>
-                    <th>Comment</th>
-                    <th>OpID</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var comment in _change.Comments)
-                    {
-                        <tr>
-                            <td>@comment.ComID</td>
-                            <td>@comment.Comment</td>
-                            <td>@comment.Operator.OpID</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+            <div style="padding: 10px;">
+                <Comment OnCommentChanged="OnCommentAdded" />
+            </div>
+            
+
+            @foreach (var comment in _change.Comments)
+            {
+                <div style="padding: 10px;">
+                    <Comment Object="@comment" OnCommentChanged="OnCommentChanged" />
+                </div>
+            }
         }
     </div>
 </div>
@@ -140,6 +132,16 @@
         _change.Description = description;
         _changeHasChanged = true;
     }
+    private void OnCommentChanged(CommentModel comment)
+    {
+        //TODO: Implement
+        _changeHasChanged = true;
+    }
+    private void OnCommentAdded(CommentModel comment)
+    {
+        _change.Comments.Add(comment);
+        _changeHasChanged = true;
+    }
 }
 
 <style>
@@ -179,5 +181,10 @@
         display: block;
         margin-bottom: 1px;
         margin-top: 10px;
+    }
+
+    .description {
+        padding: 10px;
+        border-bottom: 1px solid lightgray;
     }
 </style>

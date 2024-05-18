@@ -1,0 +1,91 @@
+﻿@using Blazorise
+@using Blazorise.RichTextEdit
+@using DataAccessLibrary
+@inject ICM_Operators _dbOperators
+
+<form class="form-container d-flex justify-content-between align-items-center" >
+    <Dropdown>
+        <DropdownToggle>
+            @if (Object == null || Object.Operator == null || string.IsNullOrEmpty(Object.Operator.UPN)){
+                <span>Operator</span>
+            } else {
+                @Object.Operator.UPN
+            }
+        </DropdownToggle>
+        <DropdownMenu>
+            @if (Operators == null){
+                <DropdownItem>Loading...</DropdownItem>
+            } else {
+                @foreach (var op in Operators)
+                {
+                    <DropdownItem Clicked="() => DropdownItemClicked(op.UPN)">@op.UPN</DropdownItem>
+                }
+            } 
+        </DropdownMenu>
+    </Dropdown>
+    
+    @if (buttonClicked == false){
+        <button type="button" class="btn btn-primary" @onclick="OnButtonClicked">✏️</button>
+    }
+</form>
+
+@if (Object != null)
+{
+    @if (buttonClicked == false){
+        <div class="commentText">
+            @if (string.IsNullOrEmpty(Object.Comment) == false){
+                @((MarkupString)Object.Comment)
+            }
+        </div>
+    } else {
+        <RichTextEdit @ref="_richTextEdit" 
+            ContentChanged="@OnContentChanged">
+        </RichTextEdit>
+    }
+}
+
+@code {
+    [Parameter]
+    public CommentModel Object { get; set; }
+    [Parameter]
+    public EventCallback<CommentModel> OnCommentChanged { get; set; }
+    public List<OperatorModel> Operators { get; set; }
+    private RichTextEdit _richTextEdit;
+    private bool buttonClicked = false;
+
+    protected override async Task OnInitializedAsync(){
+        Operators = await _dbOperators.GetOperators();
+        if (Object == null){
+            Object = new CommentModel();
+            buttonClicked = true;
+        }
+    }
+    private async void OnContentChanged(){
+        var html = await _richTextEdit.GetHtmlAsync();
+
+        if (html != Object.Comment){
+            Object.Comment = html;
+            await OnCommentChanged.InvokeAsync(Object);
+        }
+    }
+    private async void DropdownItemClicked(string upn){
+        Object.Operator = Operators.FirstOrDefault(o => o.UPN == upn);
+        await OnCommentChanged.InvokeAsync(Object);
+    }
+     private async Task OnButtonClicked()
+    {
+        buttonClicked = true;
+        if (string.IsNullOrEmpty(Object.Comment) == false)
+            await _richTextEdit.SetHtmlAsync(Object.Comment);
+        await InvokeAsync(StateHasChanged);
+    }
+}
+
+<style>
+    .commentText {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        margin-top: 10px;
+    }
+</style>
