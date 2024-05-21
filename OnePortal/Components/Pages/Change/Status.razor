@@ -1,5 +1,6 @@
 ﻿<label for="status">Status</label>
 <select id="status" @bind="@CurrentStatus" @bind:event="oninput" @onchange="OnSelectionChangedStatus">
+    <option value="Oprettet">Ikke godkendt</option>
     <option value="Ikke godkendt">Ikke godkendt</option>
     <option value="Godkendt">Godkendt</option>
     @if (NeedApproval == false || ApprovedByApprover)

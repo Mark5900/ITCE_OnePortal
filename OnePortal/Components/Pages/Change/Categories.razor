@@ -50,6 +50,7 @@
     {
         _categories = await _dbCategories.GetCategories();
         _subCategories = await _dbSubCategories.GetSubCategories();
+        await OnCategoryChanged.InvokeAsync(_subCategories.FirstOrDefault());
     }
     private async void OnSelectionChangedSubCategories(ChangeEventArgs e)
     {
@@ -57,7 +58,9 @@
         {
             SubCategory = _subCategories.FirstOrDefault(x => x.SubCatID == selectedOption);
             _categoryChanged = false;
-            await OnCategoryChanged.InvokeAsync(SubCategory);
+
+            if (SubCategory.SubCatID == 0)
+                await OnCategoryChanged.InvokeAsync(SubCategory);
         }
     }
     private async Task OnSelectionChangedCategories(ChangeEventArgs e)

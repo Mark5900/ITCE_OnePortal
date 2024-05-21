@@ -15,4 +15,13 @@ public class ChangeModel
     public bool IsTemplate { get; set; }
     public bool NeedApproval { get; set; }
     public List<CommentModel> Comments { get; set; } = new List<CommentModel>();
+
+    public ChangeModel()
+    {
+        Caller = new CallerModel();
+        SubCategory = new SubCategoryModel();
+        StartTime = DateTime.Now;
+        ImplementedTime = DateTime.Now;
+        Operator = new OperatorModel();
+    }
 }

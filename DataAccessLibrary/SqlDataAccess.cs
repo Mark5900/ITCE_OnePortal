@@ -96,5 +96,14 @@ public class SqlDataAccess : ISqlDataAccess
             await connection.ExecuteAsync(sql, parameters);
         }
     }
+    public async Task<int> SaveDataAndGetID(string sql, object parameters)
+    {
+        string connectionString = _config.GetConnectionString(ConnectionStringName);
+
+        using (IDbConnection connection = new SqlConnection(connectionString))
+        {
+            return await connection.QuerySingleAsync<int>(sql, parameters);
+        }
+    }
 }
 

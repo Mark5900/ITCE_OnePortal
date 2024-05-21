@@ -26,6 +26,9 @@
     protected override async Task OnInitializedAsync()
     {
         _operators = await _dbOperators.GetOperators();
+        
+        if (OperatorObj.OpID == 0)
+            await OnOperatorChanged.InvokeAsync(_operators.FirstOrDefault());
     }
     private async Task OnSelectOperatorChanged(ChangeEventArgs e)
     {

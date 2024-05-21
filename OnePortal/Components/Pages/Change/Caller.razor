@@ -4,7 +4,7 @@
 @inject ISkoleData _dbSkoleData
 
 <input type="email" @bind="CallerPerson.UPN" @bind:event="oninput" @onchange="OnInputChangedCallerUPN"
-    style="font-size: 20px; font-weight: bold;" />
+    class="@GetUPNClass()" />
 <br />
 
 @if (CallerPerson.CallId == null || CallerPerson.CallId == 0)
@@ -43,7 +43,7 @@ else
 <br />
 
 📧
-<input type="email" @bind="CallerPerson.Email" @bind:event="oninput" @onchange="OnInputChangedCallerEmail" />
+<input type="email" @bind="CallerPerson.Email" @bind:event="oninput" @onchange="OnInputChangedCallerEmail" class="@GetEmailClass()"/>
 
 @code {
     [Parameter]
@@ -52,10 +52,21 @@ else
     [Parameter]
     public EventCallback<CallerModel> OnCallerChanged { get; set; }
     private List<SkoleDataModel> _skoleData;
+    private string GetEmailClass()
+    {
+        return string.IsNullOrEmpty(CallerPerson.Email) ? "red-input" : string.Empty;
+    }
+    private string GetUPNClass()
+    {
+        return string.IsNullOrEmpty(CallerPerson.UPN) ? "red-input" : "upn";
+    }
 
     protected override async Task OnInitializedAsync()
     {
         _skoleData = await _dbSkoleData.GetSkoleData();
+
+        if (CallerPerson.CallId == 0)
+            CallerPerson.SkolePrefix = _skoleData.FirstOrDefault().SkolePrefix;
     }
 
     private async void OnInputChangedCallerEmail(ChangeEventArgs e)
@@ -69,6 +80,7 @@ else
             {
                 CallerPerson = new CallerModel();
                 CallerPerson.Email = email;
+                CallerPerson.SkolePrefix = _skoleData.FirstOrDefault().SkolePrefix;
             }
             else
             {
@@ -104,6 +116,7 @@ else
             {
                 CallerPerson = new CallerModel();
                 CallerPerson.UPN = upn;
+                CallerPerson.SkolePrefix = _skoleData.FirstOrDefault().SkolePrefix;
             }
             else
             {
@@ -121,5 +134,12 @@ else
         display: block;
         margin-bottom: 1px;
         margin-top: 10px;
+    }
+    .red-input {
+        background-color: red;
+    }
+    .upn {
+        font-size: 20px;
+        font-weight: bold;
     }
 </style>

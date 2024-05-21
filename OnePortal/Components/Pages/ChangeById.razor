@@ -4,6 +4,9 @@
 @rendermode InteractiveServer
 @inject ICM_Changes _dbChanges
 @inject ILogger<ChangeById> _logger
+@inject NavigationManager NavigationManager
+
+<PageTitle>Change @ChanID</PageTitle>
 
 <form class="form-container d-flex justify-content-between align-items-center">
     <h1>Change ID: @ChanID</h1>
@@ -83,7 +86,14 @@
     private CommentModel _newComment = new CommentModel();
     protected override async Task OnInitializedAsync()
     {
-        _change = await _dbChanges.GetChange(ChanIDInt);
+         _logger.LogInformation($"ChangeById with ID {ChanIDInt} was initialized");
+
+        if (ChanIDInt == 0){
+            _change = new ChangeModel();
+            _change.Status = "Oprettet";
+        } else {
+            _change = await _dbChanges.GetChange(ChanIDInt);
+        }
     }
 
     private async void ButtonSaveClicked()
@@ -92,6 +102,13 @@
         {
             _change.Comments.Add(_newComment);
             _addNewComment = false;
+        }
+
+        if (ChanIDInt == 0){
+            int newID = await _dbChanges.CreateChangeAndGetID(_change);
+            _logger.LogInformation($"Change with ID {newID} was created");
+            NavigationManager.NavigateTo($"/Changes/{newID}", true);
+            return;
         }
 
         await _dbChanges.UpdateChange(_change);
@@ -106,22 +123,22 @@
     {
         _change.StartTime = times.StartTime;
         _change.ImplementedTime = times.ImplementedTime;
-        _changeHasChanged = true;
+        ValidateChange();
     }
     private void OnCallerChanged(CallerModel caller)
     {
         _change.Caller = caller;
-        _changeHasChanged = true;
+        ValidateChange();
     }
     private void OnCategoryChanged(SubCategoryModel subCategory)
     {
         _change.SubCategory = subCategory;
-        _changeHasChanged = true;
+        ValidateChange();
     }
     private void OnOperatorChanged(OperatorModel operatorObj)
     {
         _change.Operator = operatorObj;
-        _changeHasChanged = true;
+        ValidateChange();
     }
     private void OnStatusChanged(string status)
     {
@@ -131,17 +148,17 @@
         }
 
         _change.Status = status;
-        _changeHasChanged = true;
+        ValidateChange();
     }
     private void OnBriefDescriptionChanged(string briefDescription)
     {
         _change.BriefDescription = briefDescription;
-        _changeHasChanged = true;
+        ValidateChange();
     }
     private void OnDescriptionChanged(string description)
     {
         _change.Description = description;
-        _changeHasChanged = true;
+        ValidateChange();
     }
     private void OnCommentChanged(CommentModel comment)
     {
@@ -157,8 +174,31 @@
             return;
 
         _newComment = comment;
-        _changeHasChanged = true;
+        ValidateChange();
         _addNewComment = true;
+    }
+    private void ValidateChange()
+    {
+        // Validate that the change has the minimum required data
+
+        if (string.IsNullOrWhiteSpace(_change.BriefDescription))
+        {
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(_change.Description))
+        {
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(_change.Caller?.UPN))
+        {
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(_change.Caller?.Email))
+        {
+            return;
+        }
+        
+        _changeHasChanged = true;
     }
 }
 

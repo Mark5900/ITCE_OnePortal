@@ -1,5 +1,4 @@
-﻿<input type="text" value="@Text" class="@inputClassBriefDesc"
-                    @onchange="OnInputChangedBriefDescription" />
+﻿<input type="text" value="@Text" class="@inputClassBriefDesc" @onchange="OnInputChangedBriefDescription" />
 
 @code {
     [Parameter]
@@ -7,7 +6,13 @@
     [Parameter]
     public EventCallback<string> OnBriefDescriptionChanged { get; set; }
     private string inputClassBriefDesc = "brief-description";
-
+    protected override async Task OnInitializedAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Text))
+        {
+            inputClassBriefDesc = "brief-description-error";
+        }
+    }
     private async void OnInputChangedBriefDescription(ChangeEventArgs e)
     {
         string temp = e.Value.ToString();

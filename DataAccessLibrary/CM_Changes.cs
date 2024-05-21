@@ -148,4 +148,66 @@ public class CM_Changes : ICM_Changes
             }
         }
     }
+    public async Task<int> CreateChangeAndGetID(ChangeModel change){
+        #region Create Caller and update if needed
+        if (change.Caller.CallId == 0)
+        {
+            await new CM_Callers(_db).CreateCaller(change.Caller);
+
+            CallerModel caller;
+            if (!string.IsNullOrEmpty(change.Caller.UPN))
+            {
+                caller = await new CM_Callers(_db).GetCallerByUPN(change.Caller.UPN);
+            }
+            else
+            {
+                caller = await new CM_Callers(_db).GetCallerByEmailAddress(change.Caller.Email);
+            }
+
+            if (caller == null)
+            {
+                throw new Exception("Caller not found after creation");
+            }
+            else
+            {
+                change.Caller = caller;
+            }
+        }
+        else
+        {
+            await new CM_Callers(_db).UpdateCaller(change.Caller);
+        }
+        #endregion
+
+        string query = @"
+        INSERT INTO dbo.CM_Changes
+        (CallID, BriefDescription, SubCatID, Description, StartTime, ImplementedTime, Status, ApprovedByApprover, OpID, IsTemplate, NeedApproval)
+        VALUES
+        (@CallID, @BriefDescription, @SubCatID, @Description, @StartTime, @ImplementedTime, @Status, @ApprovedByApprover, @OpID, @IsTemplate, @NeedApproval)
+        SELECT SCOPE_IDENTITY()";
+
+        var parameters = new
+        {
+            CallID = change.Caller.CallId,
+            BriefDescription = change.BriefDescription,
+            SubCatID = change.SubCategory.SubCatID,
+            Description = change.Description,
+            StartTime = change.StartTime,
+            ImplementedTime = change.ImplementedTime,
+            Status = change.Status,
+            ApprovedByApprover = change.ApprovedByApprover,
+            OpID = change.Operator.OpID,
+            IsTemplate = change.IsTemplate,
+            NeedApproval = change.NeedApproval
+        };
+
+        change.ChanID = await _db.SaveDataAndGetID(query, parameters);
+
+        foreach (var comment in change.Comments)
+        {
+            await new CM_Comments(_db).CreateComment(comment, change.ChanID);
+        }
+
+        return change.ChanID;
+    }
 }
