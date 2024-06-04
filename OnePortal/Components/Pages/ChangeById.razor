@@ -108,7 +108,6 @@
             int newID = await _dbChanges.CreateChangeAndGetID(_change);
             _logger.LogInformation($"Change with ID {newID} was created");
             NavigationManager.NavigateTo($"/Changes/{newID}", true);
-            return;
         }
 
         await _dbChanges.UpdateChange(_change);

@@ -179,6 +179,11 @@ public class CM_Changes : ICM_Changes
         }
         #endregion
 
+        if (change.SubCategory == null || change.SubCategory.SubCatID == 0)
+        {
+            throw new Exception("SubCategory is null in ChangeModel");
+        }
+
         string query = @"
         INSERT INTO dbo.CM_Changes
         (CallID, BriefDescription, SubCatID, Description, StartTime, ImplementedTime, Status, ApprovedByApprover, OpID, IsTemplate, NeedApproval)

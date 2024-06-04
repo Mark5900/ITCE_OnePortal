@@ -67,6 +67,10 @@
 
         if (html != Object.Comment){
             Object.Comment = html;
+
+            if (Object.Operator == null)
+                Object.Operator = Operators.FirstOrDefault();
+
             await OnCommentChanged.InvokeAsync(Object);
         }
     }

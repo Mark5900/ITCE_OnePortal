@@ -2,6 +2,7 @@
 @using System.ComponentModel.DataAnnotations
 @inject ICM_Callers _dbCallers
 @inject ISkoleData _dbSkoleData
+@inject ILogger<ChangeById> _logger
 
 <input type="email" @bind="CallerPerson.UPN" @bind:event="oninput" @onchange="OnInputChangedCallerUPN"
     class="@GetUPNClass()" />
@@ -10,7 +11,7 @@
 @if (CallerPerson.CallId == null || CallerPerson.CallId == 0)
 {
     <select @bind="CallerPerson.SkolePrefix" @bind:event="oninput">
-        @if (_skoleData == null)
+    @if (_skoleData == null)
         {
             <option>Loading...</option>
         }
@@ -43,7 +44,8 @@ else
 <br />
 
 📧
-<input type="email" @bind="CallerPerson.Email" @bind:event="oninput" @onchange="OnInputChangedCallerEmail" class="@GetEmailClass()"/>
+<input type="email" @bind="CallerPerson.Email" @bind:event="oninput" @onchange="OnInputChangedCallerEmail"
+    class="@GetEmailClass()" />
 
 @code {
     [Parameter]
@@ -72,10 +74,11 @@ else
     private async void OnInputChangedCallerEmail(ChangeEventArgs e)
     {
         string email = e.Value.ToString().ToLower();
-        if (CallerPerson.CallId != 0){
-                CallerModel newCaller = null;
-                newCaller = await _dbCallers.GetCallerByEmailAddress(email);
-            
+        if (CallerPerson.CallId != 0)
+        {
+            CallerModel newCaller = null;
+            newCaller = await _dbCallers.GetCallerByEmailAddress(email);
+
             if (newCaller == null)
             {
                 CallerPerson = new CallerModel();
@@ -86,7 +89,9 @@ else
             {
                 CallerPerson = newCaller;
             }
-        } else {
+        }
+        else
+        {
             CallerPerson.Email = email;
         }
 
@@ -108,10 +113,21 @@ else
     private async void OnInputChangedCallerUPN(ChangeEventArgs e)
     {
         string upn = e.Value.ToString().ToLower();
-        if (CallerPerson.CallId != 0) {
-            CallerModel newCaller = null;
-            newCaller = await _dbCallers.GetCallerByUPN(upn);
 
+        CallerModel newCaller = null;
+        newCaller = await _dbCallers.GetCallerByUPN(upn);
+        
+        if (newCaller == null)
+        {
+            _logger.LogInformation($"Caller with UPN {upn} was not found in the database");
+        }
+        else
+        {
+            _logger.LogInformation($"Caller with UPN {upn} was found in the database");
+        }
+
+        if (CallerPerson.CallId != 0)
+        {
             if (newCaller == null)
             {
                 CallerPerson = new CallerModel();
@@ -122,8 +138,17 @@ else
             {
                 CallerPerson = newCaller;
             }
-        } else {
-            CallerPerson.UPN = upn;
+        }
+        else
+        {
+            if (newCaller == null)
+            {
+                CallerPerson.UPN = upn;
+            }
+            else
+            {
+                CallerPerson = newCaller;
+            }
         }
 
         await OnCallerChanged.InvokeAsync(CallerPerson);
@@ -135,9 +160,11 @@ else
         margin-bottom: 1px;
         margin-top: 10px;
     }
+
     .red-input {
         background-color: red;
     }
+
     .upn {
         font-size: 20px;
         font-weight: bold;
