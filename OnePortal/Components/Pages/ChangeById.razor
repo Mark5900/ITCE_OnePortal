@@ -163,6 +163,7 @@
     {
         _change.Comments = _change.Comments.Where(c => c.ComID != comment.ComID).ToList();
         _change.Comments.Add(comment);
+        ValidateChange();
     }
     private void OnCommentAdded(CommentModel comment)
     {

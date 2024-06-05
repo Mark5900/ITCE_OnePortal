@@ -2,38 +2,44 @@
 @using Blazorise.RichTextEdit
 @using DataAccessLibrary
 @inject ICM_Operators _dbOperators
+@inject ILogger<Comment> _logger
 
-<form class="form-container d-flex justify-content-between align-items-center" >
+<form class="form-container d-flex justify-content-between align-items-center">
     <Dropdown>
         <DropdownToggle>
-            @if (Object == null || Object.Operator == null || string.IsNullOrEmpty(Object.Operator.UPN)){
+            @if (Object == null || Object.Operator == null || string.IsNullOrEmpty(Object.Operator.UPN))
+            {
                 <span>Operator</span>
-            } else {
+            }
+            else
+            {
                 @Object.Operator.UPN
             }
         </DropdownToggle>
         <DropdownMenu>
-            @if (Operators == null){
+            @if (Operators == null)
+            {
                 <DropdownItem>Loading...</DropdownItem>
-            } else {
+            }
+            else
+            {
                 @foreach (var op in Operators)
                 {
                     <DropdownItem Clicked="() => DropdownItemClicked(op.UPN)">@op.UPN</DropdownItem>
                 }
-            } 
+            }
         </DropdownMenu>
     </Dropdown>
-    
-    @if (buttonClicked == false){
+
+    @if (buttonClicked == false)
+    {
         <button type="button" class="btn btn-primary" @onclick="OnButtonClicked">✏️</button>
     }
 </form>
 
 
-        <RichTextEdit @ref="_richTextEdit" 
-            ContentChanged="@OnContentChanged"
-            ReadOnly="@readOnly">
-        </RichTextEdit>
+<RichTextEdit @ref="_richTextEdit" ContentChanged="@OnContentChanged" ReadOnly="@readOnly">
+</RichTextEdit>
 
 @code {
     [Parameter]
@@ -45,7 +51,8 @@
     private bool buttonClicked = false;
     private bool readOnly => buttonClicked == false;
 
-    protected override async Task OnInitializedAsync(){
+    protected override async Task OnInitializedAsync()
+    {
         Operators = await _dbOperators.GetOperators();
 
         if (Object == null)
@@ -53,7 +60,7 @@
 
         if (Object.ComID == 0)
             buttonClicked = true;
-            
+
     }
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -62,23 +69,24 @@
             await _richTextEdit.SetHtmlAsync(Object.Comment);
         }
     }
-    private async void OnContentChanged(){
+    private async void OnContentChanged()
+    {
         var html = await _richTextEdit.GetHtmlAsync();
+        _logger.LogInformation("Comment changed: {html}", html);
 
-        if (html != Object.Comment){
-            Object.Comment = html;
+        Object.Comment = html;
 
-            if (Object.Operator == null)
-                Object.Operator = Operators.FirstOrDefault();
+        if (string.IsNullOrEmpty(Object.Operator.UPN))
+            Object.Operator = Operators.FirstOrDefault();
 
-            await OnCommentChanged.InvokeAsync(Object);
-        }
+        await OnCommentChanged.InvokeAsync(Object);
     }
-    private async void DropdownItemClicked(string upn){
+    private async void DropdownItemClicked(string upn)
+    {
         Object.Operator = Operators.FirstOrDefault(o => o.UPN == upn);
         await OnCommentChanged.InvokeAsync(Object);
     }
-     private async Task OnButtonClicked()
+    private async Task OnButtonClicked()
     {
         buttonClicked = true;
         await InvokeAsync(StateHasChanged);
