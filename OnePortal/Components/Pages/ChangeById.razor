@@ -161,8 +161,15 @@
     }
     private void OnCommentChanged(CommentModel comment)
     {
-        _change.Comments = _change.Comments.Where(c => c.ComID != comment.ComID).ToList();
-        _change.Comments.Add(comment);
+        var index = _change.Comments.FindIndex(c => c.ComID == comment.ComID);
+        if (index != -1)
+        {
+            _change.Comments[index] = comment;
+        }
+        else
+        {
+            _change.Comments.Add(comment);
+        }
         ValidateChange();
     }
     private void OnCommentAdded(CommentModel comment)
