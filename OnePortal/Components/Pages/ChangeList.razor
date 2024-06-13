@@ -5,7 +5,11 @@
 
 @rendermode InteractiveServer
 
-<h1>Current changes</h1>
+<form class="form-container d-flex justify-content-between align-items-center">
+    <h1>Current changes</h1>
+    <a href="/Changes/0" class="btn btn-primary">+</a>
+</form>
+
 @if (_changes is null)
 {
     <p><em>Loading...</em></p>
@@ -37,7 +41,7 @@ else
     void OnRowDoubleClicked(DataGridRowMouseEventArgs<ChangeModel> e)
     {
         var id = e.Item.ChanID;
-        NavigationManager.NavigateTo($"/changes/{id}");
+        NavigationManager.NavigateTo($"/Changes/{id}");
     }
 }
 

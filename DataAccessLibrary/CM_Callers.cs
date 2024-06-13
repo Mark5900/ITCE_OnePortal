@@ -11,26 +11,41 @@ public class CM_Callers : ICM_Callers
         _db = db;
     }
 
-    public Task<List<CallerModel>> GetCallers()
+    public async Task<List<CallerModel>> GetCallers()
     {
         const string query = "SELECT * FROM dbo.CM_Callers";
 
-        return _db.LoadData<CallerModel, dynamic>(query, new { });
+        return await _db.LoadData<CallerModel, dynamic>(query, new { });
     }
 
-    public Task InsertCaller(CallerModel caller)
+    public async Task CreateCaller(CallerModel caller)
     {
         const string query = @"INSERT INTO dbo.CM_Callers (SkolePrefix, ADTelephoneNumber, AlternativNumber1, AlternativNumber2, Email, UPN)
                                 VALUES (@SkolePrefix, @ADTelephoneNumber, @AlternativNumber1, @AlternativNumber2, @Email, @UPN);";
 
-        return _db.SaveData(query, caller);
+        await _db.SaveData(query, caller);
     }
 
-    public Task<CallerModel> GetCallerByEmailAddress(string email)
+    public async Task<CallerModel> GetCallerByEmailAddress(string email)
     {
         const string query = "SELECT * FROM dbo.CM_Callers WHERE Email = @Email";
 
-        return _db.LoadData<CallerModel, dynamic>(query, new { Email = email })
+        return await _db.LoadData<CallerModel, dynamic>(query, new { Email = email })
             .ContinueWith(x => x.Result.FirstOrDefault());
+    }
+    public async Task<CallerModel> GetCallerByUPN(string upn)
+    {
+        const string query = "SELECT * FROM dbo.CM_Callers WHERE UPN = @UPN";
+
+        return await _db.LoadData<CallerModel, dynamic>(query, new { UPN = upn })
+            .ContinueWith(x => x.Result.FirstOrDefault());
+    }
+    public async Task UpdateCaller(CallerModel caller)
+    {
+        const string query = @"UPDATE dbo.CM_Callers
+                                SET SkolePrefix = @SkolePrefix, ADTelephoneNumber = @ADTelephoneNumber, AlternativNumber1 = @AlternativNumber1, AlternativNumber2 = @AlternativNumber2, Email = @Email, UPN = @UPN
+                                WHERE CallID = @CallID;";
+
+        _db.SaveData(query, caller);
     }
 }

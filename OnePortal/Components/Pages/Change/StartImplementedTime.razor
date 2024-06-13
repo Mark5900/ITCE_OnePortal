@@ -1,0 +1,43 @@
+﻿<label for="startTime">Start time</label>
+<input type="datetime-local" @bind="StartTime" @bind:event="oninput" id="startTime" @onblur="CheckTime" />
+
+<br />
+<label for="implementedTime">Implemented time</label>
+<input type="datetime-local" @bind="ImplementedTime" @bind:event="oninput" id="implementedTime" @onblur="CheckTime"
+    class="@implementedTimeClass" />
+
+@code {
+    [Parameter]
+    public DateTime StartTime { get; set; }
+    [Parameter]
+    public DateTime ImplementedTime { get; set; }
+    [Parameter]
+    public EventCallback<(DateTime StartTime, DateTime ImplementedTime)> OnTimesChanged { get; set; }
+    private string implementedTimeClass = "";
+
+    private async void CheckTime()
+    {
+        if (ImplementedTime < StartTime)
+        {
+            implementedTimeClass = "error";
+        }
+        else
+        {
+            implementedTimeClass = "";
+            await OnTimesChanged.InvokeAsync((StartTime, ImplementedTime));
+        }
+    }
+}
+
+<style>
+    label {
+        display: block;
+        margin-bottom: 1px;
+        margin-top: 10px;
+    }
+
+    .error {
+        border-color: red;
+        background-color: red;
+    }
+</style>

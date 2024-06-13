@@ -1,0 +1,28 @@
+﻿<label for="status">Status</label>
+<select id="status" @bind="@CurrentStatus" @bind:event="oninput" @onchange="OnSelectionChangedStatus">
+    <option value="Oprettet">Ikke godkendt</option>
+    <option value="Ikke godkendt">Ikke godkendt</option>
+    <option value="Godkendt">Godkendt</option>
+    @if (NeedApproval == false || ApprovedByApprover)
+    {
+        <option value="Ikke påbegyndt">Ikke påbegyndt</option>
+        <option value="Påbegyndt">Påbegyndt</option>
+        <option value="Afventer">Afventer</option>
+        <option value="Afsluttet">Afsluttet</option>
+    }
+</select>
+
+@code {
+    [Parameter]
+    public string CurrentStatus { get; set; }
+    [Parameter]
+    public bool NeedApproval { get; set; }
+    [Parameter]
+    public bool ApprovedByApprover { get; set; }
+    [Parameter]
+    public EventCallback<string> OnStatusChanged { get; set; }
+    private async void OnSelectionChangedStatus(ChangeEventArgs e)
+    {
+        await OnStatusChanged.InvokeAsync(e.Value.ToString());
+    }
+}

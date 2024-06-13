@@ -1,12 +1,12 @@
 ﻿@page "/Changes/{ChanID}"
 @using DataAccessLibrary
+@using OnePortal.Components.Pages.Change
 @rendermode InteractiveServer
 @inject ICM_Changes _dbChanges
-@inject ICM_SubCategories _dbSubCategories
-@inject ICM_Categories _dbCategories
-@inject ICM_Operators _dbOperators
-@inject ICM_Callers _dbCallers
 @inject ILogger<ChangeById> _logger
+@inject NavigationManager NavigationManager
+
+<PageTitle>Change @ChanID</PageTitle>
 
 <form class="form-container d-flex justify-content-between align-items-center">
     <h1>Change ID: @ChanID</h1>
@@ -21,85 +21,32 @@
         }
         else
         {
-
             <div class="caller">
-                <p style="font-size: 20px; font-weight: bold;">@_change.Caller.UPN</p>
-                <p>@_change.Caller.SkolePrefix</p>
-                <p>📱@_change.Caller.ADTelephoneNumber</p>
-                <p>📱@_change.Caller.AlternativNumber1</p>
-                <p>📱@_change.Caller.AlternativNumber2</p>
-
-                📧
-                <input type="email" @bind="_change.Caller.Email" @bind:event="oninput" @onchange="OnInputChangedCallerEmail"/>
+                <Caller CallerPerson="@_change.Caller" OnCallerChanged="OnCallerChanged" />
             </div>
             <div class="details">
-                <input type="text" value="@_change.BriefDescription" class="@inputClassBriefDesc"
-                    @onchange="OnInputChangedBriefDescription" />
+                <BriefDescription Text="@_change.BriefDescription" OnBriefDescriptionChanged="OnBriefDescriptionChanged" />
 
-                <select @bind="_change.SubCategory.CatID" @bind:event="oninput" @onchange="OnSelectionChangedCategories">
-                    @foreach (var category in _categories)
-                    {
-                        <option value="@category.CatID">@category.Category</option>
-                    }
-                </select>
-
-                <select class="@selectClassSubCat" @bind="_change.SubCategory.SubCatID" @bind:event="oninput"
-                    @onchange="OnSelectionChangedSubCategories">
-                    @if (_categoryChanged)
-                    {
-                        <option selected disabled>Vælg en underkategori</option>
-                    }
-                    @foreach (var subCategory in _subCategories)
-                    {
-                        <option value="@subCategory.SubCatID"
-                            selected="@(_categoryChanged ? null : (_change.SubCategory.SubCatID == subCategory.SubCatID ? "selected" : null))">
-                            @subCategory.Name</option>
-                    }
-                </select>
+                <Categories SubCategory="@_change.SubCategory" OnCategoryChanged="OnCategoryChanged" />
             </div>
 
             <div class="planning">
-                <label for="startTime" >Start time</label>
-                <input type="datetime-local" @bind="_change.StartTime" @bind:event="oninput" id="startTime"
-                    @onblur="CheckTime" />
-
-                <br />
-                <label for="implementedTime">Implemented time</label>
-                <input type="datetime-local" @bind="_change.ImplementedTime" @bind:event="oninput" id="implementedTime"
-                    @onblur="CheckTime" class="@implementedTimeClass" />
+                <StartImplementedTime StartTime="@_change.StartTime" 
+                ImplementedTime="@_change.ImplementedTime" OnTimesChanged="OnPlanningTimesChanged" />
             </div>
 
             <div class="processing">
-            <label for="operator">Operator</label>
-            <select id="operator" @bind="_change.Operator.OpID" @bind:event="oninput">
-                @foreach (var op in _operators)
-                    {
-                        <option value="@op.OpID">@op.UPN</option>
-                    }
-                </select>
+                <OperatorPicker OperatorObj="@_change.Operator" OnOperatorChanged="OnOperatorChanged" />
 
                 <br />
-                <label for="status">Status</label>
-                <select id="status" @bind="@_change.Status" @bind:event="oninput" @onchange="OnSelectionChangedStatus">
-                    <option value="Ikke godkendt">Ikke godkendt</option>
-                    <option value="Godkendt">Godkendt</option>
-                    @if (_change.NeedApproval == false || _change.ApprovedByApprover)
-                    {
-                        <option value="Ikke påbegyndt">Ikke påbegyndt</option>
-                        <option value="Påbegyndt">Påbegyndt</option>
-                        <option value="Afventer">Afventer</option>
-                        <option value="Afsluttet">Afsluttet</option>
-                    }
-                </select>
+                <Status CurrentStatus="@_change.Status" NeedApproval="@_change.NeedApproval"
+                    ApprovedByApprover="@_change.ApprovedByApprover" OnStatusChanged="OnStatusChanged" />
 
                 <br />
                 <input type="checkbox" @bind="_change.NeedApproval" disabled /> Need approval
                 <br />
                 <input type="checkbox" @bind="_change.ApprovedByApprover" disabled /> Approved by approver
-
-
             </div>
-
         }
     </div>
 
@@ -111,28 +58,20 @@
         else
         {
             <div class="description">
-                <p>@_change.Description</p>
+                <Description RichText="@_change.Description" OnDescriptionChanged="OnDescriptionChanged" />
             </div>
 
-            <table class="table">
-            <thead>
-                <tr>
-                    <th>ComID</th>
-                    <th>Comment</th>
-                    <th>OpID</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var comment in _change.Comments)
-                    {
-                        <tr>
-                            <td>@comment.ComID</td>
-                            <td>@comment.Comment</td>
-                            <td>@comment.Operator.OpID</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+            <div style="padding: 10px;">
+                <Comment Object="@_newComment" OnCommentChanged="OnCommentAdded" />
+            </div>
+            
+
+            @foreach (var comment in _change.Comments)
+            {
+                <div style="padding: 10px;">
+                    <Comment Object="@comment" OnCommentChanged="OnCommentChanged" />
+                </div>
+            }
         }
     </div>
 </div>
@@ -140,94 +79,133 @@
 @code {
     [Parameter]
     public string ChanID { get; set; }
-    public int ChanIDInt => int.TryParse(ChanID, out var chanId) ? chanId : -1;
+    private int ChanIDInt => int.TryParse(ChanID, out var chanId) ? chanId : -1;
     private ChangeModel _change;
-    private List<CategoryModel> _categories;
-    private List<SubCategoryModel> _subCategories;
-    private List<OperatorModel> _operators;
-    private bool _categoryChanged = false;
-    private string selectClassSubCat => _categoryChanged ? "red-select" : "";
     private bool _changeHasChanged = false;
-    private string implementedTimeClass = "";
-    private string inputClassBriefDesc = "brief-description";
+    private bool _addNewComment = false;
+    private CommentModel _newComment = new CommentModel();
     protected override async Task OnInitializedAsync()
     {
-        _change = await _dbChanges.GetChange(ChanIDInt);
-        _categories = await _dbCategories.GetCategories();
-        _subCategories = await _dbSubCategories.GetSubCategoriesByCategory(_change.SubCategory.CatID);
-        _operators = await _dbOperators.GetOperators();
-    }
-    void OnSelectionChangedSubCategories(ChangeEventArgs e)
-    {
-        if (int.TryParse(e.Value.ToString(), out var selectedOption))
-        {
-            _change.SubCategory = _subCategories.FirstOrDefault(x => x.SubCatID == selectedOption);
-            _categoryChanged = false;
-            _changeHasChanged = true;
-        }
-    }
+         _logger.LogInformation($"ChangeById with ID {ChanIDInt} was initialized");
 
-    async Task OnSelectionChangedCategories(ChangeEventArgs e)
-    {
-        if (int.TryParse(e.Value.ToString(), out var selectedOption))
-        {
-            _subCategories = await _dbSubCategories.GetSubCategoriesByCategory(selectedOption);
-            _categoryChanged = true;
+        if (ChanIDInt == 0){
+            _change = new ChangeModel();
+            _change.Status = "Oprettet";
+        } else {
+            _change = await _dbChanges.GetChange(ChanIDInt);
         }
     }
 
     private async void ButtonSaveClicked()
     {
+        if (_addNewComment)
+        {
+            _change.Comments.Add(_newComment);
+            _addNewComment = false;
+        }
+
+        if (ChanIDInt == 0){
+            int newID = await _dbChanges.CreateChangeAndGetID(_change);
+            _logger.LogInformation($"Change with ID {newID} was created");
+            NavigationManager.NavigateTo($"/Changes/{newID}", true);
+        }
+
         await _dbChanges.UpdateChange(_change);
         _changeHasChanged = false;
         _logger.LogInformation($"Change with ID {_change.ChanID} was updated");
+
+        // Refresh page to get the updated data
+        _change = await _dbChanges.GetChange(ChanIDInt);
     }
 
-    private void CheckTime()
+    private void OnPlanningTimesChanged((DateTime StartTime, DateTime ImplementedTime) times)
     {
-        if (_change.ImplementedTime < _change.StartTime)
-        {
-            implementedTimeClass = "error";
-            _changeHasChanged = false;
-        }
-        else
-        {
-            implementedTimeClass = "";
-            _changeHasChanged = true;
-        }
+        _change.StartTime = times.StartTime;
+        _change.ImplementedTime = times.ImplementedTime;
+        ValidateChange();
     }
-
-    private void OnInputChangedBriefDescription(ChangeEventArgs e)
+    private void OnCallerChanged(CallerModel caller)
     {
-        string temp = e.Value.ToString();
-        if (temp.Length >= 150 || string.IsNullOrWhiteSpace(temp))
-        {
-            inputClassBriefDesc = "brief-description-error";
-            _changeHasChanged = false;
-        }
-        else
-        {
-            inputClassBriefDesc = "brief-description";
-            _changeHasChanged = true;
-            _change.BriefDescription = temp;
-        }
+        _change.Caller = caller;
+        ValidateChange();
     }
-
-    private void OnSelectionChangedStatus(ChangeEventArgs e)
+    private void OnCategoryChanged(SubCategoryModel subCategory)
     {
-        if (e.Value.ToString() == "Godkendt")
+        _change.SubCategory = subCategory;
+        ValidateChange();
+    }
+    private void OnOperatorChanged(OperatorModel operatorObj)
+    {
+        _change.Operator = operatorObj;
+        ValidateChange();
+    }
+    private void OnStatusChanged(string status)
+    {
+        if (status == "Godkendt")
         {
             _change.ApprovedByApprover = true;
         }
 
-        _change.Status = e.Value.ToString();
-        _changeHasChanged = true;
+        _change.Status = status;
+        ValidateChange();
     }
-
-    private void OnInputChangedCallerEmail(ChangeEventArgs e)
+    private void OnBriefDescriptionChanged(string briefDescription)
     {
-        string email = e.Value.ToString();
-        //TODO validate email
+        _change.BriefDescription = briefDescription;
+        ValidateChange();
+    }
+    private void OnDescriptionChanged(string description)
+    {
+        _change.Description = description;
+        ValidateChange();
+    }
+    private void OnCommentChanged(CommentModel comment)
+    {
+        var index = _change.Comments.FindIndex(c => c.ComID == comment.ComID);
+        if (index != -1)
+        {
+            _change.Comments[index] = comment;
+        }
+        else
+        {
+            _change.Comments.Add(comment);
+        }
+        ValidateChange();
+    }
+    private void OnCommentAdded(CommentModel comment)
+    {
+        if (string.IsNullOrWhiteSpace(comment.Comment))
+            return;
+
+        if (string.IsNullOrWhiteSpace(comment.Operator?.UPN))
+            return;
+
+        _newComment = comment;
+        ValidateChange();
+        _addNewComment = true;
+    }
+    private void ValidateChange()
+    {
+        // Validate that the change has the minimum required data
+
+        if (string.IsNullOrWhiteSpace(_change.BriefDescription))
+        {
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(_change.Description))
+        {
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(_change.Caller?.UPN))
+        {
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(_change.Caller?.Email))
+        {
+            return;
+        }
+        
+        _changeHasChanged = true;
     }
 }
 
@@ -243,10 +221,6 @@
 
     .right-side {
         flex: 2;
-    }
-
-    .red-select {
-        background-color: red;
     }
 
     .caller {
@@ -268,26 +242,14 @@
         padding: 10px;
     }
 
-    .error {
-        border-color: red;
-        background-color: red;
-    }
-
-    .brief-description {
-        font-size: 20px;
-        font-weight: bold;
-    }
-
-    .brief-description-error {
-        border-color: red;
-        background-color: red;
-        font-size: 20px;
-        font-weight: bold;
-    }
-
     label {
         display: block;
         margin-bottom: 1px;
         margin-top: 10px;
+    }
+
+    .description {
+        padding: 10px;
+        border-bottom: 1px solid lightgray;
     }
 </style>
